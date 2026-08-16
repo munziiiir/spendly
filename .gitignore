@@ -12,3 +12,7 @@ web-build/
 *.orig.*
 .env*.local
 coverage/
+
+# local working notes, not part of the submission
+BUILD_SPEC.md
+CLAUDE.md
