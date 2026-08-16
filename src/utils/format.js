@@ -56,10 +56,15 @@ export function shiftMonth(monthKey, delta) {
 
 /** Validate the amount typed into the expense form. */
 export function parseAmount(input) {
-  const cleaned = String(input).replace(/[^0-9.]/g, '');
+  const raw = String(input);
+  const cleaned = raw.replace(/[^0-9.]/g, '');
   const value = parseFloat(cleaned);
   if (!cleaned || Number.isNaN(value)) return { ok: false, error: 'Enter an amount' };
-  if (value <= 0) return { ok: false, error: 'Amount must be more than zero' };
+  // The clean-up above removes a minus sign, so "-4" would otherwise pass the
+  // zero check as 4. Look at the original text instead.
+  if (raw.includes('-') || value <= 0) {
+    return { ok: false, error: 'Amount must be more than zero' };
+  }
   if (value > 1000000) return { ok: false, error: 'That amount looks too large' };
   return { ok: true, value: Math.round(value * 100) / 100 };
 }
