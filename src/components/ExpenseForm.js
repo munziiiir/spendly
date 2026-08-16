@@ -61,8 +61,15 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
     }
   }
 
+  // Changing the date clears its error, so a corrected date does not keep
+  // showing the message from the previous attempt.
+  function changeDate(value) {
+    setDate(value);
+    setErrors((current) => ({ ...current, date: undefined }));
+  }
+
   function setQuickDate(offsetDays) {
-    setDate(toDateKey(new Date(Date.now() - offsetDays * 86400000)));
+    changeDate(toDateKey(new Date(Date.now() - offsetDays * 86400000)));
   }
 
   return (
@@ -153,7 +160,7 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
         </View>
         <TextInput
           value={date}
-          onChangeText={setDate}
+          onChangeText={changeDate}
           placeholder="YYYY-MM-DD"
           placeholderTextColor={theme.textMuted}
           autoCapitalize="none"
