@@ -10,6 +10,9 @@ const DEFAULT_SETTINGS = {
   currency: 'GBP',
   themeMode: 'system', // 'system' | 'light' | 'dark'
   monthlyBudget: 500,
+  // Budgets for single months, keyed by "YYYY-MM". A month with no entry here
+  // falls back to monthlyBudget, so the Settings figure stays the default.
+  monthlyBudgets: {},
 };
 
 const SettingsContext = createContext(null);
@@ -55,8 +58,41 @@ export function SettingsProvider({ children }) {
     saveJSON(STORAGE_KEY, DEFAULT_SETTINGS);
   }, []);
 
+  /** Give one month its own budget. */
+  const setBudgetForMonth = useCallback((monthKey, value) => {
+    setSettings((current) => {
+      const next = {
+        ...current,
+        monthlyBudgets: { ...current.monthlyBudgets, [monthKey]: value },
+      };
+      saveJSON(STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
+
+  /** Drop the budget of one month so it follows the default again. */
+  const clearBudgetForMonth = useCallback((monthKey) => {
+    setSettings((current) => {
+      const nextBudgets = { ...current.monthlyBudgets };
+      delete nextBudgets[monthKey];
+      const next = { ...current, monthlyBudgets: nextBudgets };
+      saveJSON(STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
+
   const isDark =
     settings.themeMode === 'system' ? systemScheme === 'dark' : settings.themeMode === 'dark';
+
+  /** The budget that applies to a month, and whether that month overrides the default. */
+  const getBudgetForMonth = useCallback(
+    (monthKey) => {
+      const custom = settings.monthlyBudgets?.[monthKey];
+      const isCustom = typeof custom === 'number';
+      return { budget: isCustom ? custom : settings.monthlyBudget, isCustom };
+    },
+    [settings.monthlyBudgets, settings.monthlyBudget]
+  );
 
   const value = useMemo(
     () => ({
@@ -66,8 +102,20 @@ export function SettingsProvider({ children }) {
       theme: isDark ? darkTheme : lightTheme,
       updateSetting,
       resetSettings,
+      getBudgetForMonth,
+      setBudgetForMonth,
+      clearBudgetForMonth,
     }),
-    [settings, loading, isDark, updateSetting, resetSettings]
+    [
+      settings,
+      loading,
+      isDark,
+      updateSetting,
+      resetSettings,
+      getBudgetForMonth,
+      setBudgetForMonth,
+      clearBudgetForMonth,
+    ]
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

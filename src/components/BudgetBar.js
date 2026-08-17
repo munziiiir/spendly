@@ -5,27 +5,32 @@ import { radius, spacing } from '../theme';
 import { formatMoney } from '../utils/format';
 
 /**
- * Progress bar comparing this month's spend against the budget set in
- * Settings. Turns amber past 80% and red once the budget is exceeded.
+ * Progress bar comparing one month's spend against that month's budget.
+ * Turns amber past 80% and red once the budget is exceeded.
+ *
+ * The budget comes from `getBudgetForMonth`, so a month with its own figure
+ * uses that figure and every other month uses the default from Settings.
  */
-export default function BudgetBar({ spent }) {
+export default function BudgetBar({ spent, month }) {
   const theme = useTheme();
-  const { currency, monthlyBudget } = useSettings();
+  const { currency, getBudgetForMonth } = useSettings();
+  const { budget, isCustom } = getBudgetForMonth(month);
 
-  if (!monthlyBudget || monthlyBudget <= 0) return null;
+  if (!budget || budget <= 0) return null;
 
-  const ratio = Math.min(spent / monthlyBudget, 1);
-  const percent = Math.round((spent / monthlyBudget) * 100);
+  const ratio = Math.min(spent / budget, 1);
+  const percent = Math.round((spent / budget) * 100);
   const barColor = percent >= 100 ? theme.danger : percent >= 80 ? theme.warning : theme.success;
 
   return (
     <View style={styles.root}>
       <View style={styles.labels}>
         <Text style={[styles.caption, { color: theme.textMuted }]}>
-          {percent}% of {formatMoney(monthlyBudget, currency)} budget
+          {percent}% of {formatMoney(budget, currency)}
+          {isCustom ? ' set for this month' : ' budget'}
         </Text>
         <Text style={[styles.caption, { color: barColor, fontWeight: '700' }]}>
-          {percent >= 100 ? 'Over budget' : `${formatMoney(monthlyBudget - spent, currency)} left`}
+          {percent >= 100 ? 'Over budget' : `${formatMoney(budget - spent, currency)} left`}
         </Text>
       </View>
 
