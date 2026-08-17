@@ -43,6 +43,10 @@ function RootNavigator() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
+          name="expense/new"
+          options={{ title: 'Add Expense', presentation: 'modal' }}
+        />
+        <Stack.Screen
           name="expense/[id]"
           options={{ title: 'Edit Expense', presentation: 'modal' }}
         />

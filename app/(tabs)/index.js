@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, SectionList, StyleSheet, Text, View } from 'react-native';
@@ -70,7 +69,7 @@ export default function HomeScreen() {
           <Text style={[styles.summaryValue, { color: theme.text }]}>
             {formatMoney(monthTotal, currency)}
           </Text>
-          <BudgetBar spent={monthTotal} />
+          <BudgetBar spent={monthTotal} month={currentMonth} />
         </View>
 
         <CategoryChips value={filter} onChange={setFilter} />
@@ -100,7 +99,7 @@ export default function HomeScreen() {
             message={
               filter
                 ? 'Try a different category, or clear the filter to see everything.'
-                : 'Tap the Add tab to record your first expense. Everything is saved on this device.'
+                : 'Tap the plus button to record your first expense. Everything is saved on this device.'
             }
           />
         }
