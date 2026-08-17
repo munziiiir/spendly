@@ -23,6 +23,7 @@ export const CURRENCIES = [
   { code: 'GBP', symbol: '£', label: 'British Pound' },
   { code: 'USD', symbol: '$', label: 'US Dollar' },
   { code: 'EUR', symbol: '€', label: 'Euro' },
+  { code: 'MVR', symbol: 'Rf', label: 'Maldivian Rufiyaa' },
 ];
 
 export function getCurrencySymbol(code) {

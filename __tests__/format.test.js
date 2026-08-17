@@ -21,8 +21,16 @@ describe('formatMoney', () => {
     expect(formatMoney(12.5, 'EUR')).toBe('€12.50');
   });
 
+  it('puts a space after a word symbol such as the Maldivian Rufiyaa', () => {
+    expect(formatMoney(110.5, 'MVR')).toBe('Rf 110.50');
+  });
+
   it('falls back to zero for a value that is not a number', () => {
     expect(formatMoney(undefined, 'GBP')).toBe('£0.00');
+  });
+
+  it('falls back to the pound symbol for an unknown currency', () => {
+    expect(formatMoney(5, 'XYZ')).toBe('£5.00');
   });
 });
 
