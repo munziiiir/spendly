@@ -1,13 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import CategoryBreakdown from '../../src/components/CategoryBreakdown';
+import CategoryDonut from '../../src/components/CategoryDonut';
+import DailyBars from '../../src/components/DailyBars';
 import EmptyState from '../../src/components/EmptyState';
+import MonthBudgetCard from '../../src/components/MonthBudgetCard';
+import TrendLine from '../../src/components/TrendLine';
 import { CATEGORIES, getCategory } from '../../src/constants/categories';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useSettings, useTheme } from '../../src/context/SettingsContext';
 import { radius, spacing } from '../../src/theme';
 import {
+  formatDate,
   formatMoney,
   formatMonth,
   shiftMonth,
@@ -15,17 +22,28 @@ import {
   toMonthKey,
 } from '../../src/utils/format';
 
+/** The views the user can switch between. Each one answers a different question. */
+const VIEWS = [
+  { id: 'categories', label: 'Categories', icon: 'list' },
+  { id: 'donut', label: 'Share', icon: 'pie-chart' },
+  { id: 'daily', label: 'Daily', icon: 'bar-chart' },
+  { id: 'trend', label: 'Trend', icon: 'trending-up' },
+];
+
 /**
- * Stats tab: month-by-month totals and a breakdown by category.
+ * Stats tab: one month at a time, seen four ways.
  *
- * The bar chart is drawn with plain Views rather than a charting library —
- * fewer dependencies, and it themes itself for free.
+ * The charts use the same numbers; only the question changes. Categories and
+ * Share ask where the money went, Daily asks when it went, and Trend asks
+ * whether the month is normal for this user.
  */
 export default function StatsScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { currency } = useSettings();
-  const { expenses } = useExpenses();
+  const { expenses, monthlyTotals } = useExpenses();
   const [month, setMonth] = useState(toMonthKey(toDateKey(new Date())));
+  const [view, setView] = useState('categories');
 
   const monthExpenses = useMemo(
     () => expenses.filter((item) => toMonthKey(item.date) === month),
@@ -52,11 +70,18 @@ export default function StatsScreen() {
     return monthExpenses.reduce((max, item) => (item.amount > max.amount ? item : max));
   }, [monthExpenses]);
 
+  const average = monthExpenses.length > 0 ? total / monthExpenses.length : 0;
+
+  function openExpense(id) {
+    router.push(`/expense/${id}`);
+  }
+
   return (
     <ScrollView
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       {/* Month switcher */}
       <View style={[styles.switcher, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -85,7 +110,10 @@ export default function StatsScreen() {
       <View style={styles.statRow}>
         <StatCard label="Total" value={formatMoney(total, currency)} theme={theme} />
         <StatCard label="Expenses" value={String(monthExpenses.length)} theme={theme} />
+        <StatCard label="Average" value={formatMoney(average, currency)} theme={theme} />
       </View>
+
+      <MonthBudgetCard month={month} spent={total} />
 
       {monthExpenses.length === 0 ? (
         <EmptyState
@@ -95,47 +123,83 @@ export default function StatsScreen() {
         />
       ) : (
         <>
-          <Text style={[styles.heading, { color: theme.text }]}>By category</Text>
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            {breakdown.map((row) => {
-              const share = total > 0 ? row.total / total : 0;
+          {/* View switcher */}
+          <View style={[styles.segment, { backgroundColor: theme.surface }]}>
+            {VIEWS.map((option) => {
+              const selected = view === option.id;
               return (
-                <View key={row.id} style={styles.barRow}>
-                  <View style={styles.barLabels}>
-                    <View style={styles.barName}>
-                      <Ionicons name={row.icon} size={15} color={row.color} />
-                      <Text style={[styles.barText, { color: theme.text }]}>{row.label}</Text>
-                    </View>
-                    <Text style={[styles.barText, { color: theme.textMuted }]}>
-                      {formatMoney(row.total, currency)} · {Math.round(share * 100)}%
-                    </Text>
-                  </View>
-                  <View style={[styles.track, { backgroundColor: theme.surface }]}>
-                    <View
-                      style={[
-                        styles.fill,
-                        { width: `${share * 100}%`, backgroundColor: row.color },
-                      ]}
-                    />
-                  </View>
-                </View>
+                <Pressable
+                  key={option.id}
+                  onPress={() => setView(option.id)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={`${option.label} view`}
+                  style={[styles.segmentItem, selected && { backgroundColor: theme.brand }]}
+                >
+                  <Ionicons
+                    name={option.icon}
+                    size={15}
+                    color={selected ? theme.onBrand : theme.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      { color: selected ? theme.onBrand : theme.textMuted },
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
               );
             })}
+          </View>
+
+          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            {view === 'categories' && (
+              <>
+                <Text style={[styles.cardHint, { color: theme.textMuted }]}>
+                  Tap a category to see the expenses behind it.
+                </Text>
+                <CategoryBreakdown
+                  rows={breakdown}
+                  total={total}
+                  expenses={monthExpenses}
+                  onOpenExpense={openExpense}
+                />
+              </>
+            )}
+
+            {view === 'donut' && <CategoryDonut rows={breakdown} total={total} />}
+
+            {view === 'daily' && <DailyBars expenses={monthExpenses} month={month} />}
+
+            {view === 'trend' && <TrendLine monthlyTotals={monthlyTotals} month={month} />}
           </View>
 
           {!!biggest && (
             <>
               <Text style={[styles.heading, { color: theme.text }]}>Largest expense</Text>
-              <View
-                style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
+              <Pressable
+                onPress={() => openExpense(biggest.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Largest expense, ${formatMoney(
+                  biggest.amount,
+                  currency
+                )}. Tap to edit.`}
+                style={({ pressed }) => [
+                  styles.card,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                  pressed && { opacity: 0.7 },
+                ]}
               >
                 <Text style={[styles.biggestAmount, { color: theme.text }]}>
                   {formatMoney(biggest.amount, currency)}
                 </Text>
                 <Text style={[styles.biggestNote, { color: theme.textMuted }]}>
-                  {biggest.note || getCategory(biggest.category).label}
+                  {biggest.note || getCategory(biggest.category).label} ·{' '}
+                  {formatDate(biggest.date)}
                 </Text>
-              </View>
+              </Pressable>
             </>
           )}
         </>
@@ -146,11 +210,11 @@ export default function StatsScreen() {
 
 function StatCard({ label, value, theme }) {
   return (
-    <View
-      style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-    >
+    <View style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Text style={[styles.statLabel, { color: theme.textMuted }]}>{label}</Text>
-      <Text style={[styles.statValue, { color: theme.text }]}>{value}</Text>
+      <Text style={[styles.statValue, { color: theme.text }]} numberOfLines={1}>
+        {value}
+      </Text>
     </View>
   );
 }
@@ -167,18 +231,30 @@ const styles = StyleSheet.create({
   },
   arrow: { padding: spacing.sm },
   monthLabel: { fontSize: 16, fontWeight: '700' },
-  statRow: { flexDirection: 'row', gap: spacing.md },
-  statCard: { flex: 1, padding: spacing.lg, borderRadius: radius.md, borderWidth: 1, gap: spacing.xs },
-  statLabel: { fontSize: 12, fontWeight: '600' },
-  statValue: { fontSize: 22, fontWeight: '800' },
+  statRow: { flexDirection: 'row', gap: spacing.sm },
+  statCard: {
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    gap: spacing.xs,
+  },
+  statLabel: { fontSize: 11, fontWeight: '600' },
+  statValue: { fontSize: 17, fontWeight: '800' },
+  segment: { flexDirection: 'row', borderRadius: radius.sm, padding: spacing.xs },
+  segmentItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.sm,
+  },
+  segmentText: { fontSize: 12, fontWeight: '700' },
   heading: { fontSize: 16, fontWeight: '700', marginTop: spacing.md },
   card: { padding: spacing.lg, borderRadius: radius.md, borderWidth: 1, gap: spacing.lg },
-  barRow: { gap: spacing.sm },
-  barLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  barName: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  barText: { fontSize: 13, fontWeight: '600' },
-  track: { height: 10, borderRadius: radius.pill, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: radius.pill },
+  cardHint: { fontSize: 12 },
   biggestAmount: { fontSize: 28, fontWeight: '800' },
   biggestNote: { fontSize: 14 },
 });
