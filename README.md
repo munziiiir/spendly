@@ -35,7 +35,7 @@ npm test
 
 | Feature | What it does |
 |---|---|
-| **Multi-screen navigation** | Three bottom tabs (Expenses, Stats, Settings) built with Expo Router, plus a raised centre button. A stack sits above the tabs: the add form opens on it as a modal (`app/expense/new.js`) and the edit screen opens through the dynamic route `app/expense/[id].js`. |
+| **Multi-screen navigation** | Three bottom tabs (Expenses, Stats, Settings) built with Expo Router, plus a raised action button in the tab bar. A stack sits above the tabs: the add form opens on it as a modal (`app/expense/new.js`) and the edit screen opens through the dynamic route `app/expense/[id].js`. |
 | **State management with the Context API** | Two React contexts hold all state. `ExpensesContext` holds the list and its create, update and delete actions, and uses `useReducer` with a pure reducer. `SettingsContext` holds the currency, the theme and the budgets. |
 | **Persistence with AsyncStorage** | The app reads the saved data once when it starts, and writes it back after every change. Your expenses and settings survive a force-quit and a restart of the phone. |
 | **Works offline** | There is no network call anywhere in the app. Spendly works the same in aeroplane mode. |
@@ -178,6 +178,10 @@ TESTING.md                    The test report
 - **The Add button is not exactly centred.** The tab bar has four slots, so the
   raised button sits between Stats and Settings rather than at the middle of the
   screen. A custom tab bar would fix this.
+- **The top of the Add button may not respond on Android.** The button is lifted
+  above the tab bar with a negative margin. iOS still accepts a touch there.
+  Android drops a touch outside the bounds of the parent, so the top part of the
+  circle can be dead. Testing ran on iOS only.
 - **The exchange rate is not converted.** Changing the currency changes the
   symbol only. It does not convert the amounts you already recorded.
 

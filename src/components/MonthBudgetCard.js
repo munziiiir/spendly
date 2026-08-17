@@ -27,6 +27,10 @@ export default function MonthBudgetCard({ month, spent }) {
   function commit() {
     const value = parseFloat(String(text).replace(/[^0-9.]/g, ''));
     const safe = Number.isFinite(value) && value >= 0 ? Math.round(value * 100) / 100 : 0;
+    // The field starts at the default figure. Without this guard, a tap on the
+    // field and a tap away would pin the month to the default for ever, and it
+    // would stop following a later change in Settings.
+    if (!isCustom && safe === budget) return;
     setBudgetForMonth(month, safe);
     setText(String(safe));
   }

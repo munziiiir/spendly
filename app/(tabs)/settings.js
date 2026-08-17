@@ -124,8 +124,8 @@ export default function SettingsScreen() {
         {/* Monthly budget */}
         <Section title="Monthly budget" theme={theme}>
           <Text style={[styles.hint, { color: theme.textMuted }]}>
-            The Expenses tab compares this month's spending against this figure. Set it to 0
-            to hide the budget bar.
+            Every month uses this figure unless you give that month a budget of its own on
+            the Stats tab. Set it to 0 to hide the budget bar.
           </Text>
           <TextInput
             value={budgetText}

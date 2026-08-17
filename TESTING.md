@@ -38,7 +38,7 @@ target the rejection cases more than the happy path.
 | 10 | Budget bar colours | Set the budget to 500, then 250, then 200 | The bar is green at 42%, amber at 84% and red at 105% | Pass |
 | 11 | Dark mode | Settings, Appearance, tap Dark | Every screen, the header and the tab bar change at once | Pass |
 | 12 | Currency change | Settings, Currency, tap USD | Every amount in the app shows the $ symbol | Pass |
-| 13 | Empty amount | Add tab, tap Save with no amount | The banner "Enter an amount" appears and the app does not crash | Pass |
+| 13 | Empty amount | Open the Add modal, tap Save with no amount | The banner "Enter an amount" appears, the Save button stays reachable, and the app does not crash | Pass |
 | 14 | Impossible date | Enter the date `2026-02-31` and Save | The message "That date does not exist" appears and nothing is saved | Pass |
 | 15 | Clear all expenses | Settings, Clear all expenses, tap Delete | The list is empty and the "No expenses yet" state returns | Pass |
 | 16 | Add opens as a modal | Tap the raised button in the tab bar | The Add form opens as a sheet over the tabs, not as a tab | Pass |
@@ -50,6 +50,8 @@ target the rejection cases more than the happy path.
 | 22 | Share view | Stats, tap Share | A ring chart shows the split, with the month total in the middle and a legend below | Pass |
 | 23 | Daily view | Stats, tap Daily | One bar per day of the month, with the peak figure and the busiest day | Pass |
 | 24 | Trend view | Stats, tap Trend | A line over six months, with the selected month as the last point | Pass |
+| 25 | A tap alone does not set a budget | Stats, a month with the default, tap the budget field, tap Done without typing | The month still reads "default from Settings" and no "Use default" button appears | Pass |
+| 26 | Charts in the dark theme | Set the theme to Dark, open each of the four views | Every chart, label and legend stays readable | Pass |
 
 ## Defects found and fixed
 
