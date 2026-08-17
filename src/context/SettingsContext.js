@@ -1,18 +1,31 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { RATES, convert } from '../constants/rates';
 import { darkTheme, lightTheme } from '../theme';
 import { loadJSON, saveJSON } from '../utils/storage';
 
 const STORAGE_KEY = '@spendly/settings';
 
+/**
+ * Budgets are held in US dollars, the same base the expense totals use. The
+ * screens convert them to the currency the user has chosen. Without this, a
+ * budget of 400 would stay 400 after a switch from rufiyaa to dollars and
+ * would no longer mean the same amount of money.
+ */
+const BASE_CURRENCY = 'USD';
+
+// Marks settings whose budgets are already held in the base currency.
+const BUDGET_VERSION = 2;
+
 const DEFAULT_SETTINGS = {
   currency: 'GBP',
   themeMode: 'system', // 'system' | 'light' | 'dark'
-  monthlyBudget: 500,
+  monthlyBudget: 500 / RATES.GBP, // 500 pounds, held in dollars
   // Budgets for single months, keyed by "YYYY-MM". A month with no entry here
   // falls back to monthlyBudget, so the Settings figure stays the default.
   monthlyBudgets: {},
+  budgetVersion: BUDGET_VERSION,
 };
 
 const SettingsContext = createContext(null);
@@ -36,7 +49,25 @@ export function SettingsProvider({ children }) {
       if (cancelled) return;
       // Merge rather than replace, so a settings key added in a later version
       // still gets its default instead of coming back undefined.
-      setSettings({ ...DEFAULT_SETTINGS, ...(result.value || {}) });
+      const merged = { ...DEFAULT_SETTINGS, ...(result.value || {}) };
+
+      // Budgets saved before this version were held in whatever currency the
+      // user had chosen. Convert them to the base currency once, and record
+      // that it happened so it never runs twice.
+      if (merged.budgetVersion !== BUDGET_VERSION) {
+        const from = merged.currency || 'GBP';
+        merged.monthlyBudget = convert(merged.monthlyBudget, from, BASE_CURRENCY);
+        merged.monthlyBudgets = Object.fromEntries(
+          Object.entries(merged.monthlyBudgets || {}).map(([key, value]) => [
+            key,
+            convert(value, from, BASE_CURRENCY),
+          ])
+        );
+        merged.budgetVersion = BUDGET_VERSION;
+        saveJSON(STORAGE_KEY, merged);
+      }
+
+      setSettings(merged);
       setLoading(false);
     })();
 
@@ -58,12 +89,27 @@ export function SettingsProvider({ children }) {
     saveJSON(STORAGE_KEY, DEFAULT_SETTINGS);
   }, []);
 
-  /** Give one month its own budget. */
+  /** Give one month its own budget. `value` is in the chosen currency. */
   const setBudgetForMonth = useCallback((monthKey, value) => {
     setSettings((current) => {
       const next = {
         ...current,
-        monthlyBudgets: { ...current.monthlyBudgets, [monthKey]: value },
+        monthlyBudgets: {
+          ...current.monthlyBudgets,
+          [monthKey]: convert(value, current.currency, BASE_CURRENCY),
+        },
+      };
+      saveJSON(STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
+
+  /** Change the default budget. `value` is in the chosen currency. */
+  const setDefaultBudget = useCallback((value) => {
+    setSettings((current) => {
+      const next = {
+        ...current,
+        monthlyBudget: convert(value, current.currency, BASE_CURRENCY),
       };
       saveJSON(STORAGE_KEY, next);
       return next;
@@ -84,15 +130,22 @@ export function SettingsProvider({ children }) {
   const isDark =
     settings.themeMode === 'system' ? systemScheme === 'dark' : settings.themeMode === 'dark';
 
-  /** The budget that applies to a month, and whether that month overrides the default. */
+  /**
+   * The budget that applies to a month, in the chosen currency, and whether
+   * that month overrides the default.
+   */
   const getBudgetForMonth = useCallback(
     (monthKey) => {
       const custom = settings.monthlyBudgets?.[monthKey];
       const isCustom = typeof custom === 'number';
-      return { budget: isCustom ? custom : settings.monthlyBudget, isCustom };
+      const base = isCustom ? custom : settings.monthlyBudget;
+      return { budget: convert(base, BASE_CURRENCY, settings.currency), isCustom };
     },
-    [settings.monthlyBudgets, settings.monthlyBudget]
+    [settings.monthlyBudgets, settings.monthlyBudget, settings.currency]
   );
+
+  /** The default budget, in the chosen currency. */
+  const defaultBudget = convert(settings.monthlyBudget, BASE_CURRENCY, settings.currency);
 
   const value = useMemo(
     () => ({
@@ -102,8 +155,10 @@ export function SettingsProvider({ children }) {
       theme: isDark ? darkTheme : lightTheme,
       updateSetting,
       resetSettings,
+      defaultBudget,
       getBudgetForMonth,
       setBudgetForMonth,
+      setDefaultBudget,
       clearBudgetForMonth,
     }),
     [
@@ -112,8 +167,10 @@ export function SettingsProvider({ children }) {
       isDark,
       updateSetting,
       resetSettings,
+      defaultBudget,
       getBudgetForMonth,
       setBudgetForMonth,
+      setDefaultBudget,
       clearBudgetForMonth,
     ]
   );

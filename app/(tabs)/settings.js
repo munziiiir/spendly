@@ -2,8 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import CurrencySign from '../../src/components/CurrencySign';
 import ScreenContainer from '../../src/components/ScreenContainer';
 import { CURRENCIES } from '../../src/constants/categories';
+import { RATES_TAKEN_ON } from '../../src/constants/rates';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useSettings, useTheme } from '../../src/context/SettingsContext';
 import { radius, spacing } from '../../src/theme';
@@ -23,21 +25,21 @@ const THEME_MODES = [
  */
 export default function SettingsScreen() {
   const theme = useTheme();
-  const { currency, themeMode, monthlyBudget, updateSetting } = useSettings();
+  const { currency, themeMode, defaultBudget, updateSetting, setDefaultBudget } = useSettings();
   const { clearAll, expenses } = useExpenses();
 
   // The budget field holds text while the user types, and only commits a
   // number on blur. Settings hydrate from storage after the first render, so
   // the field follows the stored value when it arrives.
-  const [budgetText, setBudgetText] = useState(String(monthlyBudget ?? ''));
+  const [budgetText, setBudgetText] = useState(String(defaultBudget ?? ''));
   useEffect(() => {
-    setBudgetText(String(monthlyBudget ?? ''));
-  }, [monthlyBudget]);
+    setBudgetText(String(defaultBudget ?? ''));
+  }, [defaultBudget]);
 
   function commitBudget() {
     const value = parseFloat(String(budgetText).replace(/[^0-9.]/g, ''));
     const safe = Number.isFinite(value) && value >= 0 ? Math.round(value * 100) / 100 : 0;
-    updateSetting('monthlyBudget', safe);
+    setDefaultBudget(safe);
     setBudgetText(String(safe));
   }
 
@@ -108,7 +110,9 @@ export default function SettingsScreen() {
                   index > 0 && { borderTopWidth: 1, borderTopColor: theme.border },
                 ]}
               >
-                <Text style={[styles.rowSymbol, { color: theme.text }]}>{item.symbol}</Text>
+                <View style={styles.rowSymbol}>
+                  <CurrencySign code={item.code} size={20} color={theme.text} />
+                </View>
                 <View style={styles.rowBody}>
                   <Text style={[styles.rowTitle, { color: theme.text }]}>{item.code}</Text>
                   <Text style={[styles.rowSubtitle, { color: theme.textMuted }]}>
@@ -119,6 +123,12 @@ export default function SettingsScreen() {
               </Pressable>
             );
           })}
+
+          <Text style={[styles.hint, { color: theme.textMuted }]}>
+            Every expense keeps the currency you entered it in. The app converts the amounts
+            for display, at fixed rates taken on {RATES_TAKEN_ON}. It cannot check a live
+            rate, because it works offline.
+          </Text>
         </Section>
 
         {/* Monthly budget */}
@@ -213,7 +223,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.md,
   },
-  rowSymbol: { fontSize: 20, fontWeight: '700', width: 24, textAlign: 'center' },
+  rowSymbol: { width: 26, alignItems: 'center', justifyContent: 'center' },
   rowBody: { flex: 1 },
   rowTitle: { fontSize: 15, fontWeight: '600' },
   rowSubtitle: { fontSize: 12 },

@@ -11,8 +11,10 @@ import {
   View,
 } from 'react-native';
 
+import CurrencySign from './CurrencySign';
 import ErrorBanner from './ErrorBanner';
-import { CATEGORIES, getCurrencySymbol } from '../constants/categories';
+import { CATEGORIES } from '../constants/categories';
+import { convert } from '../constants/rates';
 import { useSettings, useTheme } from '../context/SettingsContext';
 import { radius, spacing } from '../theme';
 import { parseAmount, parseDate, toDateKey } from '../utils/format';
@@ -27,8 +29,13 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
   const theme = useTheme();
   const { currency } = useSettings();
 
+  // The form always works in the currency the user has chosen. An expense
+  // recorded in another currency is converted for editing and saved back in
+  // the chosen one, so the figure on screen is always the figure that is saved.
   const [amount, setAmount] = useState(
-    initialValue ? String(initialValue.amount.toFixed(2)) : ''
+    initialValue
+      ? convert(initialValue.amount, initialValue.currency || currency, currency).toFixed(2)
+      : ''
   );
   const [note, setNote] = useState(initialValue?.note ?? '');
   const [category, setCategory] = useState(initialValue?.category ?? CATEGORIES[0].id);
@@ -50,6 +57,7 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
       note: note.trim(),
       category,
       date: dateResult.value,
+      currency,
     });
 
     // Reset only when adding; the edit screen navigates away instead.
@@ -89,9 +97,9 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
         <View
           style={[styles.amountRow, { backgroundColor: theme.card, borderColor: theme.border }]}
         >
-          <Text style={[styles.symbol, { color: theme.textMuted }]}>
-            {getCurrencySymbol(currency)}
-          </Text>
+          <View style={styles.symbol}>
+            <CurrencySign code={currency} size={26} color={theme.textMuted} />
+          </View>
           <TextInput
             value={amount}
             onChangeText={setAmount}
@@ -228,7 +236,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
   },
-  symbol: { fontSize: 26, fontWeight: '700', marginRight: spacing.sm },
+  symbol: { marginRight: spacing.sm, justifyContent: 'center' },
   amountInput: { flex: 1, fontSize: 32, fontWeight: '700', paddingVertical: spacing.md },
   input: {
     borderWidth: 1,

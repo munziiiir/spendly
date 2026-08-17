@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import Money from './Money';
 import { getCategory } from '../constants/categories';
+import { convert } from '../constants/rates';
 import { useSettings, useTheme } from '../context/SettingsContext';
 import { radius, spacing } from '../theme';
 import { formatMoney } from '../utils/format';
@@ -16,9 +18,10 @@ export default function ExpenseItem({ expense, onPress }) {
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${category.label}, ${formatMoney(expense.amount, currency)}${
-        expense.note ? `, ${expense.note}` : ''
-      }. Tap to edit.`}
+      accessibilityLabel={`${category.label}, ${formatMoney(
+        convert(expense.amount, expense.currency || currency, currency),
+        currency
+      )}${expense.note ? `, ${expense.note}` : ''}. Tap to edit.`}
       style={({ pressed }) => [
         styles.root,
         { backgroundColor: theme.card, borderColor: theme.border },
@@ -38,9 +41,11 @@ export default function ExpenseItem({ expense, onPress }) {
         </Text>
       </View>
 
-      <Text style={[styles.amount, { color: theme.text }]}>
-        {formatMoney(expense.amount, currency)}
-      </Text>
+      <Money
+        amount={expense.amount}
+        from={expense.currency}
+        style={[styles.amount, { color: theme.text }]}
+      />
     </Pressable>
   );
 }

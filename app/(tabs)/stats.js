@@ -7,9 +7,11 @@ import CategoryBreakdown from '../../src/components/CategoryBreakdown';
 import CategoryDonut from '../../src/components/CategoryDonut';
 import DailyBars from '../../src/components/DailyBars';
 import EmptyState from '../../src/components/EmptyState';
+import Money from '../../src/components/Money';
 import MonthBudgetCard from '../../src/components/MonthBudgetCard';
 import TrendLine from '../../src/components/TrendLine';
 import { CATEGORIES, getCategory } from '../../src/constants/categories';
+import { convert } from '../../src/constants/rates';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useSettings, useTheme } from '../../src/context/SettingsContext';
 import { radius, spacing } from '../../src/theme';
@@ -45,9 +47,18 @@ export default function StatsScreen() {
   const [month, setMonth] = useState(toMonthKey(toDateKey(new Date())));
   const [view, setView] = useState('categories');
 
+  // Convert once, here. Every total, chart and list below then works on one
+  // currency and needs no conversion of its own.
   const monthExpenses = useMemo(
-    () => expenses.filter((item) => toMonthKey(item.date) === month),
-    [expenses, month]
+    () =>
+      expenses
+        .filter((item) => toMonthKey(item.date) === month)
+        .map((item) => ({
+          ...item,
+          amount: convert(item.amount, item.currency || currency, currency),
+          currency,
+        })),
+    [expenses, month, currency]
   );
 
   const total = useMemo(
@@ -108,9 +119,15 @@ export default function StatsScreen() {
 
       {/* Headline figures */}
       <View style={styles.statRow}>
-        <StatCard label="Total" value={formatMoney(total, currency)} theme={theme} />
-        <StatCard label="Expenses" value={String(monthExpenses.length)} theme={theme} />
-        <StatCard label="Average" value={formatMoney(average, currency)} theme={theme} />
+        <StatCard label="Total" theme={theme}>
+          <Money amount={total} style={[styles.statValue, { color: theme.text }]} />
+        </StatCard>
+        <StatCard label="Expenses" theme={theme}>
+          <Text style={[styles.statValue, { color: theme.text }]}>{monthExpenses.length}</Text>
+        </StatCard>
+        <StatCard label="Average" theme={theme}>
+          <Money amount={average} style={[styles.statValue, { color: theme.text }]} />
+        </StatCard>
       </View>
 
       <MonthBudgetCard month={month} spent={total} />
@@ -192,9 +209,10 @@ export default function StatsScreen() {
                   pressed && { opacity: 0.7 },
                 ]}
               >
-                <Text style={[styles.biggestAmount, { color: theme.text }]}>
-                  {formatMoney(biggest.amount, currency)}
-                </Text>
+                <Money
+                  amount={biggest.amount}
+                  style={[styles.biggestAmount, { color: theme.text }]}
+                />
                 <Text style={[styles.biggestNote, { color: theme.textMuted }]}>
                   {biggest.note || getCategory(biggest.category).label} ·{' '}
                   {formatDate(biggest.date)}
@@ -208,13 +226,11 @@ export default function StatsScreen() {
   );
 }
 
-function StatCard({ label, value, theme }) {
+function StatCard({ label, theme, children }) {
   return (
     <View style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Text style={[styles.statLabel, { color: theme.textMuted }]}>{label}</Text>
-      <Text style={[styles.statValue, { color: theme.text }]} numberOfLines={1}>
-        {value}
-      </Text>
+      {children}
     </View>
   );
 }

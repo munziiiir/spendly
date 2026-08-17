@@ -1,10 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 
 import { expensesReducer, initialExpensesState } from './expensesReducer';
+import { convert } from '../constants/rates';
 import { loadJSON, saveJSON } from '../utils/storage';
 import { toMonthKey } from '../utils/format';
 
 const STORAGE_KEY = '@spendly/expenses';
+
+// Read only for the one-time migration below. Settings themselves belong to
+// SettingsContext.
+const SETTINGS_KEY = '@spendly/settings';
 
 const ExpensesContext = createContext(null);
 
@@ -31,7 +36,17 @@ export function ExpensesProvider({ children }) {
       }
       // Guard against a hand-edited or partially written storage value.
       const safe = Array.isArray(result.value) ? result.value.filter(isValidExpense) : [];
-      dispatch({ type: 'HYDRATE', payload: safe });
+
+      // Expenses saved before the app converted currencies carry no currency of
+      // their own. Stamp them once with the currency the user had chosen, which
+      // is the currency they were typed in. The write-back effect saves them.
+      const settings = await loadJSON(SETTINGS_KEY, {});
+      const previousCurrency = settings.value?.currency || 'GBP';
+      const stamped = safe.map((item) =>
+        item.currency ? item : { ...item, currency: previousCurrency }
+      );
+
+      dispatch({ type: 'HYDRATE', payload: stamped });
     })();
 
     return () => {
@@ -77,11 +92,17 @@ export function ExpensesProvider({ children }) {
     [state.items]
   );
 
-  /** Totals per month, e.g. { "2026-08": 214.5 } */
+  /**
+   * Totals per month in US dollars, e.g. { "2026-08": 214.5 }.
+   *
+   * The list can hold expenses in several currencies, so the totals are held
+   * in one base currency. A screen converts them to the currency the user has
+   * chosen when it shows them.
+   */
   const monthlyTotals = useMemo(() => {
     return state.items.reduce((totals, item) => {
       const key = toMonthKey(item.date);
-      totals[key] = (totals[key] || 0) + item.amount;
+      totals[key] = (totals[key] || 0) + convert(item.amount, item.currency || 'USD', 'USD');
       return totals;
     }, {});
   }, [state.items]);

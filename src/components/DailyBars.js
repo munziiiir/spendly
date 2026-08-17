@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useSettings, useTheme } from '../context/SettingsContext';
+import Money from './Money';
+import { useTheme } from '../context/SettingsContext';
 import { radius, spacing } from '../theme';
-import { formatMoney } from '../utils/format';
 
 const CHART_HEIGHT = 140;
 
@@ -14,7 +14,6 @@ const CHART_HEIGHT = 140;
  */
 export default function DailyBars({ expenses, month }) {
   const theme = useTheme();
-  const { currency } = useSettings();
 
   const [year, monthNumber] = month.split('-').map(Number);
   const dayCount = new Date(year, monthNumber, 0).getDate();
@@ -33,9 +32,7 @@ export default function DailyBars({ expenses, month }) {
   return (
     <View style={styles.root}>
       <View style={styles.scale}>
-        <Text style={[styles.scaleText, { color: theme.textMuted }]}>
-          {formatMoney(max, currency)}
-        </Text>
+        <Money amount={max} style={[styles.scaleText, { color: theme.textMuted }]} />
         <Text style={[styles.scaleText, { color: theme.textMuted }]}>
           Busiest day: {busiestDay} of {dayCount}
         </Text>

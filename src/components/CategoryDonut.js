@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 
-import { useSettings, useTheme } from '../context/SettingsContext';
+import Money from './Money';
+import { useTheme } from '../context/SettingsContext';
 import { spacing } from '../theme';
-import { formatMoney } from '../utils/format';
 
 const SIZE = 180;
 const RADIUS = 70;
@@ -19,7 +19,6 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
  */
 export default function CategoryDonut({ rows, total }) {
   const theme = useTheme();
-  const { currency } = useSettings();
 
   if (total <= 0) return null;
 
@@ -62,9 +61,7 @@ export default function CategoryDonut({ rows, total }) {
         </Svg>
 
         <View style={styles.centre} pointerEvents="none">
-          <Text style={[styles.centreValue, { color: theme.text }]}>
-            {formatMoney(total, currency)}
-          </Text>
+          <Money amount={total} style={[styles.centreValue, { color: theme.text }]} />
           <Text style={[styles.centreLabel, { color: theme.textMuted }]}>total</Text>
         </View>
       </View>

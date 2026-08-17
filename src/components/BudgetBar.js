@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import Money from './Money';
 import { useSettings, useTheme } from '../context/SettingsContext';
 import { radius, spacing } from '../theme';
-import { formatMoney } from '../utils/format';
 
 /**
  * Progress bar comparing one month's spend against that month's budget.
@@ -13,7 +13,7 @@ import { formatMoney } from '../utils/format';
  */
 export default function BudgetBar({ spent, month }) {
   const theme = useTheme();
-  const { currency, getBudgetForMonth } = useSettings();
+  const { getBudgetForMonth } = useSettings();
   const { budget, isCustom } = getBudgetForMonth(month);
 
   if (!budget || budget <= 0) return null;
@@ -25,13 +25,25 @@ export default function BudgetBar({ spent, month }) {
   return (
     <View style={styles.root}>
       <View style={styles.labels}>
-        <Text style={[styles.caption, { color: theme.textMuted }]}>
-          {percent}% of {formatMoney(budget, currency)}
-          {isCustom ? ' set for this month' : ' budget'}
-        </Text>
-        <Text style={[styles.caption, { color: barColor, fontWeight: '700' }]}>
-          {percent >= 100 ? 'Over budget' : `${formatMoney(budget - spent, currency)} left`}
-        </Text>
+        <View style={styles.captionRow}>
+          <Text style={[styles.caption, { color: theme.textMuted }]}>{percent}% of </Text>
+          <Money amount={budget} style={[styles.caption, { color: theme.textMuted }]} />
+          <Text style={[styles.caption, { color: theme.textMuted }]}>
+            {isCustom ? ' set for this month' : ' budget'}
+          </Text>
+        </View>
+
+        {percent >= 100 ? (
+          <Text style={[styles.caption, styles.strong, { color: barColor }]}>Over budget</Text>
+        ) : (
+          <View style={styles.captionRow}>
+            <Money
+              amount={budget - spent}
+              style={[styles.caption, styles.strong, { color: barColor }]}
+            />
+            <Text style={[styles.caption, styles.strong, { color: barColor }]}> left</Text>
+          </View>
+        )}
       </View>
 
       <View
@@ -47,8 +59,10 @@ export default function BudgetBar({ spent, month }) {
 
 const styles = StyleSheet.create({
   root: { gap: spacing.sm, marginTop: spacing.md },
-  labels: { flexDirection: 'row', justifyContent: 'space-between' },
+  labels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  captionRow: { flexDirection: 'row', alignItems: 'center' },
   caption: { fontSize: 12 },
+  strong: { fontWeight: '700' },
   track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: radius.pill },
 });

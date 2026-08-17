@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import BudgetBar from './BudgetBar';
+import Money from './Money';
 import { useSettings, useTheme } from '../context/SettingsContext';
 import { radius, spacing } from '../theme';
-import { formatMoney, formatMonth } from '../utils/format';
+import { formatMonth } from '../utils/format';
 
 /**
  * Budget for one month, with the figure the user can change.
@@ -15,7 +16,7 @@ import { formatMoney, formatMonth } from '../utils/format';
  */
 export default function MonthBudgetCard({ month, spent }) {
   const theme = useTheme();
-  const { currency, getBudgetForMonth, setBudgetForMonth, clearBudgetForMonth } = useSettings();
+  const { getBudgetForMonth, setBudgetForMonth, clearBudgetForMonth } = useSettings();
   const { budget, isCustom } = getBudgetForMonth(month);
 
   const [text, setText] = useState(String(budget ?? ''));
@@ -91,9 +92,14 @@ export default function MonthBudgetCard({ month, spent }) {
       </Text>
 
       {!isCustom && spent > budget && budget > 0 && (
-        <Text style={[styles.hint, { color: theme.danger }]}>
-          You are {formatMoney(spent - budget, currency)} over the default budget.
-        </Text>
+        <View style={styles.hintRow}>
+          <Text style={[styles.hint, { color: theme.danger }]}>You are </Text>
+          <Money amount={spent - budget} style={[styles.hint, { color: theme.danger }]} />
+          <Text style={[styles.hint, { color: theme.danger }]}>
+            {' '}
+            over the default budget.
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -122,4 +128,5 @@ const styles = StyleSheet.create({
   },
   resetText: { fontSize: 13, fontWeight: '600' },
   hint: { fontSize: 12, lineHeight: 17 },
+  hintRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
 });

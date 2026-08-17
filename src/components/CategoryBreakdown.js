@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import Money from './Money';
 import { useSettings, useTheme } from '../context/SettingsContext';
 import { radius, spacing } from '../theme';
 import { formatDate, formatMoney } from '../utils/format';
@@ -48,9 +49,16 @@ export default function CategoryBreakdown({ rows, total, expenses, onOpenExpense
                     color={theme.textMuted}
                   />
                 </View>
-                <Text style={[styles.barText, { color: theme.textMuted }]}>
-                  {formatMoney(row.total, currency)} · {Math.round(share * 100)}%
-                </Text>
+                <View style={styles.barValue}>
+                  <Money
+                    amount={row.total}
+                    style={[styles.barText, { color: theme.textMuted }]}
+                  />
+                  <Text style={[styles.barText, { color: theme.textMuted }]}>
+                    {' '}
+                    · {Math.round(share * 100)}%
+                  </Text>
+                </View>
               </View>
               <View style={[styles.track, { backgroundColor: theme.surface }]}>
                 <View
@@ -80,9 +88,10 @@ export default function CategoryBreakdown({ rows, total, expenses, onOpenExpense
                         {formatDate(item.date)}
                       </Text>
                     </View>
-                    <Text style={[styles.detailAmount, { color: theme.text }]}>
-                      {formatMoney(item.amount, currency)}
-                    </Text>
+                    <Money
+                      amount={item.amount}
+                      style={[styles.detailAmount, { color: theme.text }]}
+                    />
                   </Pressable>
                 ))}
               </View>
@@ -98,6 +107,7 @@ const styles = StyleSheet.create({
   root: { gap: spacing.lg },
   barRow: { gap: spacing.sm },
   barLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  barValue: { flexDirection: 'row', alignItems: 'center' },
   barName: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   barText: { fontSize: 13, fontWeight: '600' },
   track: { height: 10, borderRadius: radius.pill, overflow: 'hidden' },

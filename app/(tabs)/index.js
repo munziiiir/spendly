@@ -8,10 +8,12 @@ import CategoryChips from '../../src/components/CategoryChips';
 import EmptyState from '../../src/components/EmptyState';
 import ErrorBanner from '../../src/components/ErrorBanner';
 import ExpenseItem from '../../src/components/ExpenseItem';
+import Money from '../../src/components/Money';
+import { convert } from '../../src/constants/rates';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useSettings, useTheme } from '../../src/context/SettingsContext';
 import { radius, spacing } from '../../src/theme';
-import { formatDateHeading, formatMoney, toDateKey, toMonthKey } from '../../src/utils/format';
+import { formatDateHeading, toDateKey, toMonthKey } from '../../src/utils/format';
 
 /**
  * Home screen: this month's total, a category filter, and every expense
@@ -41,12 +43,14 @@ export default function HomeScreen() {
     return Array.from(buckets, ([date, data]) => ({ title: date, data }));
   }, [visible]);
 
+  // Every expense converts into the chosen currency before it joins the total,
+  // because the list can hold expenses recorded in more than one currency.
   const monthTotal = useMemo(
     () =>
       expenses
         .filter((item) => toMonthKey(item.date) === currentMonth)
-        .reduce((sum, item) => sum + item.amount, 0),
-    [expenses, currentMonth]
+        .reduce((sum, item) => sum + convert(item.amount, item.currency || currency, currency), 0),
+    [expenses, currentMonth, currency]
   );
 
   if (loading) {
@@ -67,9 +71,7 @@ export default function HomeScreen() {
 
         <View style={[styles.summary, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.summaryLabel, { color: theme.textMuted }]}>Spent this month</Text>
-          <Text style={[styles.summaryValue, { color: theme.text }]}>
-            {formatMoney(monthTotal, currency)}
-          </Text>
+          <Money amount={monthTotal} style={[styles.summaryValue, { color: theme.text }]} />
           <BudgetBar spent={monthTotal} month={currentMonth} />
         </View>
 
