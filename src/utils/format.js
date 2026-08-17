@@ -4,8 +4,9 @@ import { getCurrencySymbol } from '../constants/categories';
 export function formatMoney(amount, currencyCode = 'GBP') {
   const value = Number.isFinite(amount) ? amount : 0;
   const symbol = getCurrencySymbol(currencyCode);
-  // A word symbol such as "Rf" needs a space; a sign such as "£" does not.
-  const gap = symbol.length > 1 ? ' ' : '';
+  // A symbol written in letters, such as "Rs", needs a space before the digits.
+  // A drawn sign such as "£" or the rufiyaa sign does not.
+  const gap = /[A-Za-z]$/.test(symbol) ? ' ' : '';
   return `${symbol}${gap}${value.toFixed(2)}`;
 }
 

@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, SectionList, StyleSheet, Text, View } from 'react-native';
 
+import AddExpenseButton from '../../src/components/AddExpenseButton';
 import BudgetBar from '../../src/components/BudgetBar';
 import CategoryChips from '../../src/components/CategoryChips';
 import EmptyState from '../../src/components/EmptyState';
@@ -99,11 +100,13 @@ export default function HomeScreen() {
             message={
               filter
                 ? 'Try a different category, or clear the filter to see everything.'
-                : 'Tap the plus button to record your first expense. Everything is saved on this device.'
+                : 'Tap "Add expense" to record your first one. Everything is saved on this device.'
             }
           />
         }
       />
+
+      <AddExpenseButton />
     </View>
   );
 }
@@ -116,7 +119,9 @@ const styles = StyleSheet.create({
   summary: { padding: spacing.lg, borderRadius: radius.lg, borderWidth: 1 },
   summaryLabel: { fontSize: 13, fontWeight: '600' },
   summaryValue: { fontSize: 34, fontWeight: '800', marginTop: spacing.xs },
-  listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
+  // The bottom padding clears the floating Add button, so the last row of the
+  // list is always reachable.
+  listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl * 3, flexGrow: 1 },
   sectionHeader: {
     fontSize: 12,
     fontWeight: '700',

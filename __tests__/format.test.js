@@ -21,8 +21,14 @@ describe('formatMoney', () => {
     expect(formatMoney(12.5, 'EUR')).toBe('€12.50');
   });
 
-  it('puts a space after a word symbol such as the Maldivian Rufiyaa', () => {
-    expect(formatMoney(110.5, 'MVR')).toBe('Rf 110.50');
+  it('builds the rufiyaa sign from Thaana Raa, a stroke and a direction mark', () => {
+    // U+0783 Raa, U+0336 combining long stroke, U+200E left-to-right mark.
+    expect(formatMoney(110.5, 'MVR')).toBe('‎ރ̶‎110.50');
+  });
+
+  it('puts a space after a symbol written in letters', () => {
+    expect(formatMoney(5, 'GBP')).toBe('£5.00');
+    expect(formatMoney(5, 'MVR')).not.toContain(' ');
   });
 
   it('falls back to zero for a value that is not a number', () => {

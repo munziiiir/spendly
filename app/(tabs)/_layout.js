@@ -1,14 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router/js-tabs';
 
-import AddTabButton from '../../src/components/AddTabButton';
 import { useSettings } from '../../src/context/SettingsContext';
 
 /**
- * Bottom tab navigator — the app's three browsing sections plus the Add action.
+ * Bottom tab navigator — the app's three browsing sections.
  *
  * Sits inside the root Stack, so opening an expense or the Add form pushes a
- * stack screen on top of the tabs rather than replacing them.
+ * stack screen on top of the tabs rather than replacing them. Adding an
+ * expense is an action, not a place, so its button lives on the Expenses
+ * screen instead of in this bar.
  */
 export default function TabsLayout() {
   const { theme } = useSettings();
@@ -40,15 +41,6 @@ export default function TabsLayout() {
         options={{
           title: 'Stats',
           tabBarIcon: ({ color, size }) => <Ionicons name="pie-chart" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="add"
-        options={{
-          title: 'Add',
-          // The slot keeps the spacing of the other tabs, but the button opens
-          // the Add modal instead of switching tab.
-          tabBarButton: () => <AddTabButton />,
         }}
       />
       <Tabs.Screen

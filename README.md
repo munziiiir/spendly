@@ -35,11 +35,12 @@ npm test
 
 | Feature | What it does |
 |---|---|
-| **Multi-screen navigation** | Three bottom tabs (Expenses, Stats, Settings) built with Expo Router, plus a raised action button in the tab bar. A stack sits above the tabs: the add form opens on it as a modal (`app/expense/new.js`) and the edit screen opens through the dynamic route `app/expense/[id].js`. |
+| **Multi-screen navigation** | Three bottom tabs (Expenses, Stats, Settings) built with Expo Router. A stack sits above the tabs: the add form opens on it as a modal (`app/expense/new.js`) and the edit screen opens through the dynamic route `app/expense/[id].js`. |
 | **State management with the Context API** | Two React contexts hold all state. `ExpensesContext` holds the list and its create, update and delete actions, and uses `useReducer` with a pure reducer. `SettingsContext` holds the currency, the theme and the budgets. |
 | **Persistence with AsyncStorage** | The app reads the saved data once when it starts, and writes it back after every change. Your expenses and settings survive a force-quit and a restart of the phone. |
 | **Works offline** | There is no network call anywhere in the app. Spendly works the same in aeroplane mode. |
-| Add an expense | The raised button in the tab bar opens the form as a modal. Enter an amount, pick one of seven categories, add an optional note, and pick a date. The form rejects an empty amount, a negative amount and an impossible date such as `2026-02-31`. |
+| Add an expense | An "Add expense" button floats over the Expenses list and opens the form as a modal. Enter an amount, pick one of seven categories, add an optional note, and pick a date. The form rejects an empty amount, a negative amount and an impossible date such as `2026-02-31`. |
+| Four currencies | GBP, USD, EUR and MVR. The rufiyaa has no sign of its own in Unicode, so the app draws the official one: the Thaana letter Raa with a line through it. |
 | Edit and delete | Tap any row to open it. Change it and save, or delete it after a confirmation alert. |
 | Expense list by day | The list groups expenses under "Today", "Yesterday" and full dates, newest first. |
 | Category filter | A chip bar filters the list to one category. An empty category shows its own message. |
@@ -72,7 +73,7 @@ npm test
     <td align="center">
       <img src="assets/screenshots/add.png" width="250" alt="The add expense form as a modal"><br>
       <b>Add</b><br>
-      The raised button opens the form as a modal over the tabs.
+      The floating button opens the form as a modal over the tabs.
     </td>
     <td align="center">
       <img src="assets/screenshots/edit.png" width="250" alt="The edit expense modal"><br>
@@ -135,9 +136,9 @@ npm test
 ```
 app/                          Routes (Expo Router)
   _layout.js                  Root stack: providers, themed header, modal routes
-  (tabs)/_layout.js           Bottom tab navigator with the raised Add button
-  (tabs)/index.js             Expenses: month total, budget bar, filter, list
-  (tabs)/add.js               Placeholder for the Add slot of the tab bar
+  (tabs)/_layout.js           Bottom tab navigator
+  (tabs)/index.js             Expenses: month total, budget bar, filter, list,
+                              and the Add expense button
   (tabs)/stats.js             Stats: month switcher, budget, four chart views
   (tabs)/settings.js          Settings: theme, currency, budget, clear all
   expense/new.js              Add screen (opens as a modal)
@@ -145,8 +146,9 @@ app/                          Routes (Expo Router)
 src/
   components/                 ScreenContainer, EmptyState, ErrorBanner,
                               ExpenseItem, CategoryChips, BudgetBar, ExpenseForm,
-                              AddTabButton, MonthBudgetCard, CategoryBreakdown,
-                              CategoryDonut, DailyBars, TrendLine
+                              AddExpenseButton, MonthBudgetCard,
+                              CategoryBreakdown, CategoryDonut, DailyBars,
+                              TrendLine
   constants/categories.js     The seven categories and the four currencies
   context/expensesReducer.js  Pure reducer for the list
   context/ExpensesContext.js  Provider, CRUD actions, storage
@@ -175,13 +177,11 @@ TESTING.md                    The test report
 - **No budget per category.** A month holds one figure. You cannot cap food or
   transport on their own.
 - **No search.** The category filter is the only way to reduce the list.
-- **The Add button is not exactly centred.** The tab bar has four slots, so the
-  raised button sits between Stats and Settings rather than at the middle of the
-  screen. A custom tab bar would fix this.
-- **The top of the Add button may not respond on Android.** The button is lifted
-  above the tab bar with a negative margin. iOS still accepts a touch there.
-  Android drops a touch outside the bounds of the parent, so the top part of the
-  circle can be dead. Testing ran on iOS only.
+- **The Add button is only on the Expenses tab.** From Stats or Settings you
+  must go back to Expenses to record something.
+- **The rufiyaa sign depends on the font of the phone.** The sign is built from
+  the Thaana letter Raa and a combining stroke, because Unicode has no code
+  point for it. A phone with no Thaana font shows a box instead.
 - **The exchange rate is not converted.** Changing the currency changes the
   symbol only. It does not convert the amounts you already recorded.
 
