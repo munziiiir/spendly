@@ -20,23 +20,18 @@ export function getCategory(id) {
 }
 
 /**
- * The rufiyaa sign has no code point of its own in Unicode. The Maldives
- * Monetary Authority draws it as the Thaana letter Raa with a line through it,
- * so it is built here from Raa (U+0783) and a combining long stroke overlay
- * (U+0336).
+ * The `symbol` of a currency is its text form. It goes into screen reader
+ * labels and into any plain string.
  *
- * Raa is a right-to-left letter. On its own it turns the whole line
- * right-to-left and the sign lands after the digits. A left-to-right mark
- * (U+200E) on each side isolates it: the first mark keeps the line
- * left-to-right, and the second closes the right-to-left run before the digits.
+ * The rufiyaa has no sign in Unicode, so its text form is the code "MVR".
+ * On screen the app draws the official sign instead: see RufiyaaSign and the
+ * Money component.
  */
-const RUFIYAA_SIGN = '‎ރ̶‎';
-
 export const CURRENCIES = [
   { code: 'GBP', symbol: '£', label: 'British Pound' },
   { code: 'USD', symbol: '$', label: 'US Dollar' },
   { code: 'EUR', symbol: '€', label: 'Euro' },
-  { code: 'MVR', symbol: RUFIYAA_SIGN, label: 'Maldivian Rufiyaa' },
+  { code: 'MVR', symbol: 'MVR', label: 'Maldivian Rufiyaa' },
 ];
 
 export function getCurrencySymbol(code) {

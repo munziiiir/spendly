@@ -21,14 +21,9 @@ describe('formatMoney', () => {
     expect(formatMoney(12.5, 'EUR')).toBe('€12.50');
   });
 
-  it('builds the rufiyaa sign from Thaana Raa, a stroke and a direction mark', () => {
-    // U+0783 Raa, U+0336 combining long stroke, U+200E left-to-right mark.
-    expect(formatMoney(110.5, 'MVR')).toBe('‎ރ̶‎110.50');
-  });
-
-  it('puts a space after a symbol written in letters', () => {
-    expect(formatMoney(5, 'GBP')).toBe('£5.00');
-    expect(formatMoney(5, 'MVR')).not.toContain(' ');
+  it('uses the code as the text form of the rufiyaa, which has no sign in Unicode', () => {
+    // The drawn sign is in RufiyaaSign. This text form goes to screen readers.
+    expect(formatMoney(110.5, 'MVR')).toBe('MVR 110.50');
   });
 
   it('falls back to zero for a value that is not a number', () => {
