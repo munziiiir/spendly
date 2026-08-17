@@ -35,17 +35,19 @@ npm test
 
 | Feature | What it does |
 |---|---|
-| **Multi-screen navigation** | Four bottom tabs (Expenses, Add, Stats, Settings) built with Expo Router. A stack sits above the tabs, and the edit screen opens on top of them as a modal through the dynamic route `app/expense/[id].js`. |
-| **State management with the Context API** | Two React contexts hold all state. `ExpensesContext` holds the list and its create, update and delete actions, and uses `useReducer` with a pure reducer. `SettingsContext` holds the currency, the theme and the budget. |
+| **Multi-screen navigation** | Three bottom tabs (Expenses, Stats, Settings) built with Expo Router, plus a raised centre button. A stack sits above the tabs: the add form opens on it as a modal (`app/expense/new.js`) and the edit screen opens through the dynamic route `app/expense/[id].js`. |
+| **State management with the Context API** | Two React contexts hold all state. `ExpensesContext` holds the list and its create, update and delete actions, and uses `useReducer` with a pure reducer. `SettingsContext` holds the currency, the theme and the budgets. |
 | **Persistence with AsyncStorage** | The app reads the saved data once when it starts, and writes it back after every change. Your expenses and settings survive a force-quit and a restart of the phone. |
 | **Works offline** | There is no network call anywhere in the app. Spendly works the same in aeroplane mode. |
-| Add an expense | Enter an amount, pick one of seven categories, add an optional note, and pick a date. The form rejects an empty amount, a negative amount and an impossible date such as `2026-02-31`. |
+| Add an expense | The raised button in the tab bar opens the form as a modal. Enter an amount, pick one of seven categories, add an optional note, and pick a date. The form rejects an empty amount, a negative amount and an impossible date such as `2026-02-31`. |
 | Edit and delete | Tap any row to open it. Change it and save, or delete it after a confirmation alert. |
 | Expense list by day | The list groups expenses under "Today", "Yesterday" and full dates, newest first. |
 | Category filter | A chip bar filters the list to one category. An empty category shows its own message. |
 | Monthly total and budget bar | The header shows what you spent this month. The bar below it turns green, amber at 80% and red at 100% of your budget. |
-| Statistics | A month switcher, the total and the count for that month, a bar chart of the share of each category, and the largest single expense. |
-| Settings | Theme (System, Light or Dark), currency (GBP, USD or EUR), the monthly budget, and a destructive "Clear all expenses" action. |
+| Budget for a single month | Every month can hold its own budget. A month with no figure of its own uses the default from Settings, so a holiday month does not force you to change the default and change it back. |
+| Four ways to read a month | The Stats tab switches between Categories, Share, Daily and Trend. Categories and Share show where the money went, Daily shows when it went, and Trend compares the last six months. |
+| Expenses behind a category | Tap a category on the Stats tab to open it and see the expenses that make up the figure. Tap one of them to edit it. |
+| Settings | Theme (System, Light or Dark), currency (GBP, USD, EUR or MVR), the default monthly budget, and a destructive "Clear all expenses" action. |
 | Light and dark themes | Every colour comes from one theme file. The whole app, the headers and the tab bar change together. |
 | Accessibility | Buttons, chips, inputs and the budget bar carry accessibility roles, labels and states for screen readers. |
 
@@ -68,26 +70,38 @@ npm test
   </tr>
   <tr>
     <td align="center">
-      <img src="assets/screenshots/add.png" width="250" alt="The add expense form"><br>
+      <img src="assets/screenshots/add.png" width="250" alt="The add expense form as a modal"><br>
       <b>Add</b><br>
-      Amount, category grid, note and date, with "Today" and "Yesterday" shortcuts.
+      The raised button opens the form as a modal over the tabs.
     </td>
     <td align="center">
       <img src="assets/screenshots/edit.png" width="250" alt="The edit expense modal"><br>
       <b>Edit</b><br>
-      The same form opened as a modal from the list, with a delete action.
+      The same form opened from the list, with a delete action.
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="assets/screenshots/stats.png" width="250" alt="The statistics screen"><br>
-      <b>Stats</b><br>
-      Month switcher, totals, the share of each category and the largest expense.
+      <img src="assets/screenshots/stats.png" width="250" alt="The statistics screen, category view"><br>
+      <b>Stats — Categories</b><br>
+      The budget for the month, and bars that open to show the expenses behind them.
+    </td>
+    <td align="center">
+      <img src="assets/screenshots/stats-share.png" width="250" alt="The statistics screen, donut chart"><br>
+      <b>Stats — Share</b><br>
+      A ring chart of the share each category takes of the month.
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="assets/screenshots/stats-trend.png" width="250" alt="The statistics screen, trend line"><br>
+      <b>Stats — Trend</b><br>
+      Spending over the six months that end with the selected month.
     </td>
     <td align="center">
       <img src="assets/screenshots/settings.png" width="250" alt="The settings screen"><br>
       <b>Settings</b><br>
-      Theme, currency, monthly budget and the clear-all action.
+      Theme, currency, the default budget and the clear-all action.
     </td>
   </tr>
   <tr>
@@ -111,6 +125,7 @@ npm test
 | React Context + `useReducer` | State management for the expense list and the user settings. |
 | AsyncStorage 2.2.0 | Local storage on the phone. |
 | @expo/vector-icons (Ionicons) | All icons in the tab bar, the category grid and the list. |
+| react-native-svg 15.15.4 | The ring chart and the trend line. The daily bar chart uses plain Views and needs no library. |
 | Jest + jest-expo | The unit tests for the reducer and the helpers. |
 
 ---
@@ -119,20 +134,23 @@ npm test
 
 ```
 app/                          Routes (Expo Router)
-  _layout.js                  Root stack: providers, themed header, modal route
-  (tabs)/_layout.js           Bottom tab navigator
+  _layout.js                  Root stack: providers, themed header, modal routes
+  (tabs)/_layout.js           Bottom tab navigator with the raised Add button
   (tabs)/index.js             Expenses: month total, budget bar, filter, list
-  (tabs)/add.js               Add tab
-  (tabs)/stats.js             Stats: month switcher, category chart
+  (tabs)/add.js               Placeholder for the Add slot of the tab bar
+  (tabs)/stats.js             Stats: month switcher, budget, four chart views
   (tabs)/settings.js          Settings: theme, currency, budget, clear all
+  expense/new.js              Add screen (opens as a modal)
   expense/[id].js             Edit screen (dynamic route, opens as a modal)
 src/
   components/                 ScreenContainer, EmptyState, ErrorBanner,
-                              ExpenseItem, CategoryChips, BudgetBar, ExpenseForm
-  constants/categories.js     The seven categories and the three currencies
+                              ExpenseItem, CategoryChips, BudgetBar, ExpenseForm,
+                              AddTabButton, MonthBudgetCard, CategoryBreakdown,
+                              CategoryDonut, DailyBars, TrendLine
+  constants/categories.js     The seven categories and the four currencies
   context/expensesReducer.js  Pure reducer for the list
   context/ExpensesContext.js  Provider, CRUD actions, storage
-  context/SettingsContext.js  Provider for currency, theme and budget
+  context/SettingsContext.js  Provider for currency, theme and budgets
   theme/index.js              Light and dark palettes, spacing and radius scales
   utils/format.js             Money and date formatting, input validation
   utils/storage.js            AsyncStorage wrappers that never throw
@@ -154,9 +172,14 @@ TESTING.md                    The test report
 - **No export.** There is no CSV or PDF export of the expenses.
 - **No recurring expenses.** You must enter a monthly bill again each month.
 - **The categories are fixed.** You cannot add, rename or remove a category.
-- **One budget for all months.** The budget is a single number, not a figure per
-  month or per category.
+- **No budget per category.** A month holds one figure. You cannot cap food or
+  transport on their own.
 - **No search.** The category filter is the only way to reduce the list.
+- **The Add button is not exactly centred.** The tab bar has four slots, so the
+  raised button sits between Stats and Settings rather than at the middle of the
+  screen. A custom tab bar would fix this.
+- **The exchange rate is not converted.** Changing the currency changes the
+  symbol only. It does not convert the amounts you already recorded.
 
 ---
 
@@ -186,6 +209,13 @@ minus sign before the "more than zero" check, so `-4` became `4`. Manual testing
 showed that a date error stayed on screen after I corrected the date. Both were
 one-line fixes, and neither would have shown up if I had only clicked through the
 happy path.
+
+File-based routing caught me a second time when I moved the add form out of the
+tabs and into a modal. I left a placeholder route at `app/(tabs)/add.js` and put
+the modal at `app/add.js`. Both resolve to `/add`, because a group in brackets
+does not appear in the path, so the button opened a blank screen instead of the
+form. Moving the modal to `/expense/new` fixed it and reads better next to
+`/expense/[id]`.
 
 If I did this again, I would build one full screen end to end before I wrote any
 other screen. I wrote most of the UI before I ran the app once, and a first run
