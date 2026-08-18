@@ -40,7 +40,8 @@ npm test
 | **Persistence with AsyncStorage** | The app reads the saved data once when it starts, and writes it back after every change. Your expenses and settings survive a force-quit and a restart of the phone. |
 | **Works offline** | There is no network call anywhere in the app. Spendly works the same in aeroplane mode. |
 | Add an expense | An "Add expense" button floats over the Expenses list and opens the form as a modal. Enter an amount, pick one of seven categories, add an optional note, and pick a date. The form rejects an empty amount, a negative amount and an impossible date such as `2026-02-31`. |
-| Four currencies | GBP, USD, EUR and MVR. The rufiyaa has no sign of its own in Unicode, so the app draws the official one: the Thaana letter Raa with a line through it. |
+| Four currencies with conversion | GBP, USD, EUR and MVR. Every expense keeps the currency you entered it in, and the app converts it for display. An expense of 10 US dollars reads as 154.20 rufiyaa once you switch to MVR. Budgets convert with it. |
+| The rufiyaa sign | The rufiyaa has no sign in Unicode, so the app draws the official Maldives Monetary Authority outline with SVG rather than a font character. |
 | Edit and delete | Tap any row to open it. Change it and save, or delete it after a confirmation alert. |
 | Expense list by day | The list groups expenses under "Today", "Yesterday" and full dates, newest first. |
 | Category filter | A chip bar filters the list to one category. An empty category shows its own message. |
@@ -126,7 +127,7 @@ npm test
 | React Context + `useReducer` | State management for the expense list and the user settings. |
 | AsyncStorage 2.2.0 | Local storage on the phone. |
 | @expo/vector-icons (Ionicons) | All icons in the tab bar, the category grid and the list. |
-| react-native-svg 15.15.4 | The ring chart and the trend line. The daily bar chart uses plain Views and needs no library. |
+| react-native-svg 15.15.4 | The ring chart, the trend line and the rufiyaa sign. The daily bar chart uses plain Views and needs no library. |
 | Jest + jest-expo | The unit tests for the reducer and the helpers. |
 
 ---
@@ -148,8 +149,9 @@ src/
                               ExpenseItem, CategoryChips, BudgetBar, ExpenseForm,
                               AddExpenseButton, MonthBudgetCard,
                               CategoryBreakdown, CategoryDonut, DailyBars,
-                              TrendLine
+                              TrendLine, Money, CurrencySign, RufiyaaSign
   constants/categories.js     The seven categories and the four currencies
+  constants/rates.js          Fixed exchange rates and the conversion helper
   context/expensesReducer.js  Pure reducer for the list
   context/ExpensesContext.js  Provider, CRUD actions, storage
   context/SettingsContext.js  Provider for currency, theme and budgets
@@ -179,11 +181,14 @@ TESTING.md                    The test report
 - **No search.** The category filter is the only way to reduce the list.
 - **The Add button is only on the Expenses tab.** From Stats or Settings you
   must go back to Expenses to record something.
-- **The rufiyaa sign depends on the font of the phone.** The sign is built from
-  the Thaana letter Raa and a combining stroke, because Unicode has no code
-  point for it. A phone with no Thaana font shows a box instead.
-- **The exchange rate is not converted.** Changing the currency changes the
-  symbol only. It does not convert the amounts you already recorded.
+- **The exchange rates are fixed in the code.** The app works offline, so it
+  cannot ask a rate service. `src/constants/rates.js` holds the figures and the
+  date they were taken. The rufiyaa is pegged to the US dollar, so that pair
+  stays right. The pound and the euro float, so their figures drift.
+- **Editing rewrites the currency of an expense.** The form works in the
+  currency you have chosen. If you open an expense recorded in dollars while
+  the app shows rufiyaa, saving it stores it in rufiyaa at the converted
+  amount.
 
 ---
 

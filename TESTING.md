@@ -6,11 +6,12 @@
 npm test
 ```
 
-Jest runs with the `jest-expo` preset. All 28 tests pass.
+Jest runs with the `jest-expo` preset. All 34 tests pass.
 
 | Suite | File | What it covers |
 |---|---|---|
 | Reducer | `__tests__/expensesReducer.test.js` | Hydrate sorts newest first, add prepends, update edits only the matching id, delete removes one item, clear empties the list, an unknown action returns the same state, and the reducer never mutates its input. |
+| Rates | `__tests__/rates.test.js` | A currency converts to itself unchanged, dollars convert to rufiyaa at the pegged rate of 15.42, the pair round-trips, the result rounds to two decimal places, an unknown currency leaves the amount alone, and every currency the app offers has a rate. |
 | Helpers | `__tests__/format.test.js` | Currency formatting for GBP, USD, EUR and MVR, and the fallback for an unknown code. `parseAmount` accepts decimals and rejects empty text, letters, zero, negative values and values above one million. `parseDate` accepts a real date, rejects `2026-02-31`, rejects the wrong format and handles leap years. Date key helpers and the month step across a year boundary. |
 
 The reducer holds all list logic and has no React or storage imports. This makes
@@ -42,7 +43,7 @@ target the rejection cases more than the happy path.
 | 14 | Impossible date | Enter the date `2026-02-31` and Save | The message "That date does not exist" appears and nothing is saved | Pass |
 | 15 | Clear all expenses | Settings, Clear all expenses, tap Delete | The list is empty and the "No expenses yet" state returns | Pass |
 | 16 | Add opens as a modal | Tap "Add expense" on the Expenses tab | The Add form opens as a sheet over the tabs, and the tab bar holds three tabs only | Pass |
-| 17 | Maldivian Rufiyaa | Settings, Currency, tap MVR | Every amount shows the rufiyaa sign in front of the digits, for example ‎ރ̶‎213.44 | Pass |
+| 17 | Maldivian Rufiyaa | Settings, Currency, tap MVR | Every amount shows the drawn rufiyaa sign in front of the digits | Pass |
 | 18 | Budget for one month | Stats, August 2026, enter 100 in the budget field | The label reads "set for this month", the bar turns red at 111%, and "Use default" appears | Pass |
 | 19 | Other months keep the default | Step to September 2026 | The budget returns to the £500 default from Settings | Pass |
 | 20 | The month budget reaches Home | Open the Expenses tab | The header bar shows the figure set for the current month, not the default | Pass |
@@ -52,6 +53,9 @@ target the rejection cases more than the happy path.
 | 24 | Trend view | Stats, tap Trend | A line over six months, with the selected month as the last point | Pass |
 | 25 | A tap alone does not set a budget | Stats, a month with the default, tap the budget field, tap Done without typing | The month still reads "default from Settings" and no "Use default" button appears | Pass |
 | 26 | Charts in the dark theme | Set the theme to Dark, open each of the four views | Every chart, label and legend stays readable | Pass |
+| 27 | Currency conversion | With expenses recorded in MVR, switch to USD | The month total falls from 213.44 to 13.84, and every row converts with it | Pass |
+| 28 | The budget converts too | Switch back to MVR | The budget of 400 dollars reads as 6168.00 rufiyaa, and the percentage stays the same | Pass |
+| 29 | The entered figure survives | Switch currency twice and return to the first one | Every amount reads exactly as it was entered | Pass |
 
 ## Defects found and fixed
 
@@ -62,7 +66,8 @@ target the rejection cases more than the happy path.
 | The Add button opened a blank screen | `app/(tabs)/add.js` and `app/add.js` both resolve to `/add`, because a group in brackets does not appear in the path | The modal moved to `app/expense/new.js`, next to the edit route |
 | The tab bar hit "Maximum update depth exceeded" | The placeholder route redirected to the modal on every render | The placeholder renders nothing; only the button navigates. The placeholder is gone now that the button left the tab bar |
 | A tap on the budget field pinned the month to the default | The field commits on blur, and it already held the default figure, so a tap and a tap away wrote that figure as an override | The commit stops when the month follows the default and the figure did not change |
-| The rufiyaa sign appeared after the digits | Thaana Raa is a right-to-left letter, so it turned the whole line right-to-left | A left-to-right mark on each side of the sign isolates it |
+| The rufiyaa sign appeared after the digits | Thaana Raa is a right-to-left letter, so it turned the whole line right-to-left | The sign is now drawn with SVG, so no letter and no text direction is involved |
+| The budget did not convert with the expenses | Budgets were plain numbers with no currency, so 400 stayed 400 after a switch and no longer meant the same money | Budgets are held in one base currency and converted for display, with a one-time migration of saved settings |
 
 The first defect came from the unit tests. The others came from the manual
 tests.
