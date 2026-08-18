@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from 'react';
 
 import { expensesReducer, initialExpensesState } from './expensesReducer';
 import { convert } from '../constants/rates';
@@ -22,6 +30,12 @@ const ExpensesContext = createContext(null);
 export function ExpensesProvider({ children }) {
   const [state, dispatch] = useReducer(expensesReducer, initialExpensesState);
 
+  // Nothing may be written back until the saved list has been read, or until
+  // the user has changed something on purpose. Without this, a failed read
+  // would leave an empty list in memory and the write-back effect below would
+  // save that empty list over the real one.
+  const canWrite = useRef(false);
+
   // Load saved expenses on first render.
   useEffect(() => {
     let cancelled = false;
@@ -41,11 +55,13 @@ export function ExpensesProvider({ children }) {
       // their own. Stamp them once with the currency the user had chosen, which
       // is the currency they were typed in. The write-back effect saves them.
       const settings = await loadJSON(SETTINGS_KEY, {});
+      if (cancelled) return;
       const previousCurrency = settings.value?.currency || 'GBP';
       const stamped = safe.map((item) =>
         item.currency ? item : { ...item, currency: previousCurrency }
       );
 
+      canWrite.current = true;
       dispatch({ type: 'HYDRATE', payload: stamped });
     })();
 
@@ -54,9 +70,10 @@ export function ExpensesProvider({ children }) {
     };
   }, []);
 
-  // Write back on every change, but not during the initial load.
+  // Write back on every change, but not during the initial load and not after
+  // a failed read.
   useEffect(() => {
-    if (state.loading) return;
+    if (state.loading || !canWrite.current) return;
     saveJSON(STORAGE_KEY, state.items).then((result) => {
       if (!result.ok) {
         dispatch({ type: 'SET_ERROR', payload: 'Could not save to this device.' });
@@ -65,6 +82,7 @@ export function ExpensesProvider({ children }) {
   }, [state.items, state.loading]);
 
   const addExpense = useCallback((draft) => {
+    canWrite.current = true;
     dispatch({
       type: 'ADD',
       payload: {
@@ -76,14 +94,17 @@ export function ExpensesProvider({ children }) {
   }, []);
 
   const updateExpense = useCallback((expense) => {
+    canWrite.current = true;
     dispatch({ type: 'UPDATE', payload: expense });
   }, []);
 
   const deleteExpense = useCallback((id) => {
+    canWrite.current = true;
     dispatch({ type: 'DELETE', payload: id });
   }, []);
 
   const clearAll = useCallback(() => {
+    canWrite.current = true;
     dispatch({ type: 'CLEAR' });
   }, []);
 
