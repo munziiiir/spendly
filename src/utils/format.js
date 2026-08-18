@@ -38,6 +38,18 @@ export function toDateKey(date) {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * "2026-08-17" -> a Date at midnight local time.
+ *
+ * `new Date("2026-08-17")` reads the string as UTC and can land on the day
+ * before, so the parts are passed separately.
+ */
+export function fromDateKey(iso) {
+  const [year, month, day] = String(iso).split('-').map(Number);
+  const date = new Date(year, (month || 1) - 1, day || 1);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
 /** "2026-08-17" -> "2026-08" */
 export function toMonthKey(iso) {
   return String(iso).slice(0, 7);

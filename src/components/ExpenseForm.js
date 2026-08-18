@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -17,7 +18,7 @@ import { CATEGORIES } from '../constants/categories';
 import { convert } from '../constants/rates';
 import { useSettings, useTheme } from '../context/SettingsContext';
 import { radius, spacing } from '../theme';
-import { parseAmount, parseDate, toDateKey } from '../utils/format';
+import { formatDate, fromDateKey, parseAmount, parseDate, toDateKey } from '../utils/format';
 
 /**
  * Shared add/edit form.
@@ -41,6 +42,7 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
   const [category, setCategory] = useState(initialValue?.category ?? CATEGORIES[0].id);
   const [date, setDate] = useState(initialValue?.date ?? toDateKey(new Date()));
   const [errors, setErrors] = useState({});
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   function handleSubmit() {
     const amountResult = parseAmount(amount);
@@ -66,6 +68,7 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
       setNote('');
       setDate(toDateKey(new Date()));
       setErrors({});
+      setPickerOpen(false);
     }
   }
 
@@ -78,6 +81,19 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
 
   function setQuickDate(offsetDays) {
     changeDate(toDateKey(new Date(Date.now() - offsetDays * 86400000)));
+    setPickerOpen(false);
+  }
+
+  /**
+   * The picker reports a Date. The rest of the app works in "YYYY-MM-DD", so
+   * the value is converted straight back to that form and nothing else in the
+   * app has to know a picker exists.
+   */
+  function handlePickerChange(event, selected) {
+    // Android shows the picker as a dialog that closes itself.
+    if (Platform.OS !== 'ios') setPickerOpen(false);
+    if (event.type === 'dismissed' || !selected) return;
+    changeDate(toDateKey(selected));
   }
 
   return (
@@ -166,18 +182,37 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
           <QuickDate label="Today" onPress={() => setQuickDate(0)} theme={theme} />
           <QuickDate label="Yesterday" onPress={() => setQuickDate(1)} theme={theme} />
         </View>
-        <TextInput
-          value={date}
-          onChangeText={changeDate}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor={theme.textMuted}
-          autoCapitalize="none"
-          accessibilityLabel="Expense date"
-          style={[
+        <Pressable
+          onPress={() => setPickerOpen((open) => !open)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: pickerOpen }}
+          accessibilityLabel={`Expense date, ${formatDate(date)}. Tap to change it.`}
+          style={({ pressed }) => [
             styles.input,
-            { backgroundColor: theme.card, borderColor: theme.border, color: theme.text },
+            styles.dateButton,
+            { backgroundColor: theme.card, borderColor: pickerOpen ? theme.brand : theme.border },
+            pressed && { opacity: 0.7 },
           ]}
-        />
+        >
+          <Ionicons name="calendar-outline" size={18} color={theme.textMuted} />
+          <Text style={[styles.dateText, { color: theme.text }]}>{formatDate(date)}</Text>
+          <Ionicons
+            name={pickerOpen ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color={theme.textMuted}
+          />
+        </Pressable>
+
+        {pickerOpen && (
+          <DateTimePicker
+            value={fromDateKey(date)}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'inline' : 'default'}
+            onChange={handlePickerChange}
+            themeVariant={theme.mode}
+            accentColor={theme.brand}
+          />
+        )}
         {!!errors.date && (
           <Text style={[styles.fieldError, { color: theme.danger }]}>{errors.date}</Text>
         )}
@@ -256,6 +291,8 @@ const styles = StyleSheet.create({
   },
   gridLabel: { fontSize: 11, fontWeight: '600' },
   quickRow: { flexDirection: 'row', gap: spacing.sm },
+  dateButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  dateText: { flex: 1, fontSize: 15, fontWeight: '600' },
   quickChip: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,

@@ -1,5 +1,6 @@
 import {
   formatMoney,
+  fromDateKey,
   parseAmount,
   parseDate,
   shiftMonth,
@@ -94,5 +95,23 @@ describe('date keys', () => {
   it('steps a month key forward and backward across a year boundary', () => {
     expect(shiftMonth('2026-12', 1)).toBe('2027-01');
     expect(shiftMonth('2026-01', -1)).toBe('2025-12');
+  });
+});
+
+describe('fromDateKey', () => {
+  it('reads a date key as local time, not UTC', () => {
+    const date = fromDateKey('2026-08-17');
+    expect(date.getFullYear()).toBe(2026);
+    expect(date.getMonth()).toBe(7);
+    expect(date.getDate()).toBe(17);
+  });
+
+  it('round-trips with toDateKey', () => {
+    expect(toDateKey(fromDateKey('2026-01-05'))).toBe('2026-01-05');
+    expect(toDateKey(fromDateKey('2024-02-29'))).toBe('2024-02-29');
+  });
+
+  it('falls back to a usable date for junk input', () => {
+    expect(fromDateKey('not a date').getTime()).not.toBeNaN();
   });
 });

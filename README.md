@@ -39,7 +39,8 @@ npm test
 | **State management with the Context API** | Two React contexts hold all state. `ExpensesContext` holds the list and its create, update and delete actions, and uses `useReducer` with a pure reducer. `SettingsContext` holds the currency, the theme and the budgets. |
 | **Persistence with AsyncStorage** | The app reads the saved data once when it starts, and writes it back after every change. Your expenses and settings survive a force-quit and a restart of the phone. |
 | **Works offline** | There is no network call anywhere in the app. Spendly works the same in aeroplane mode. |
-| Add an expense | An "Add expense" button floats over the Expenses list and opens the form as a modal. Enter an amount, pick one of seven categories, add an optional note, and pick a date. The form rejects an empty amount, a negative amount and an impossible date such as `2026-02-31`. |
+| Add an expense | An "Add expense" button floats over the Expenses list and opens the form as a modal. Enter an amount, pick one of seven categories, add an optional note, and pick a date. The form rejects an empty amount and a negative amount. |
+| Native date picker | The date opens a calendar, with "Today" and "Yesterday" buttons for the common cases. The calendar cannot offer a date that does not exist, so a typed date such as `2026-02-31` is no longer possible. |
 | Four currencies with conversion | GBP, USD, EUR and MVR. Every expense keeps the currency you entered it in, and the app converts it for display. An expense of 10 US dollars reads as 154.20 rufiyaa once you switch to MVR. Budgets convert with it. |
 | The rufiyaa sign | The rufiyaa has no sign in Unicode, so the app draws the official Maldives Monetary Authority outline with SVG rather than a font character. |
 | Edit and delete | Tap any row to open it. Change it and save, or delete it after a confirmation alert. |
@@ -128,6 +129,7 @@ npm test
 | AsyncStorage 2.2.0 | Local storage on the phone. |
 | @expo/vector-icons (Ionicons) | All icons in the tab bar, the category grid and the list. |
 | react-native-svg 15.15.4 | The ring chart, the trend line and the rufiyaa sign. The daily bar chart uses plain Views and needs no library. |
+| @react-native-community/datetimepicker 9.1.0 | The calendar for the date field. Expo Go carries this module already, so it adds no native build step. |
 | Jest + jest-expo | The unit tests for the reducer and the helpers. |
 
 ---
@@ -167,10 +169,6 @@ TESTING.md                    The test report
 
 ## Known issues and future improvements
 
-- **The date is a text field, not a native picker.** You must type `YYYY-MM-DD`.
-  The "Today" and "Yesterday" buttons cover the common cases, but a native date
-  picker would be better. It needs one more package, and the aim was to keep the
-  app free of extra dependencies.
 - **No cloud sync and no multiple devices.** The data lives on one phone. If you
   delete the app, the data goes with it.
 - **No export.** There is no CSV or PDF export of the expenses.

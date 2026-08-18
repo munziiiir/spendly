@@ -6,13 +6,13 @@
 npm test
 ```
 
-Jest runs with the `jest-expo` preset. All 34 tests pass.
+Jest runs with the `jest-expo` preset. All 37 tests pass.
 
 | Suite | File | What it covers |
 |---|---|---|
 | Reducer | `__tests__/expensesReducer.test.js` | Hydrate sorts newest first, add prepends, update edits only the matching id, delete removes one item, clear empties the list, an unknown action returns the same state, and the reducer never mutates its input. |
 | Rates | `__tests__/rates.test.js` | A currency converts to itself unchanged, dollars convert to rufiyaa at the pegged rate of 15.42, the pair round-trips, the result rounds to two decimal places, an unknown currency leaves the amount alone, and every currency the app offers has a rate. |
-| Helpers | `__tests__/format.test.js` | Currency formatting for GBP, USD, EUR and MVR, and the fallback for an unknown code. `parseAmount` accepts decimals and rejects empty text, letters, zero, negative values and values above one million. `parseDate` accepts a real date, rejects `2026-02-31`, rejects the wrong format and handles leap years. Date key helpers and the month step across a year boundary. |
+| Helpers | `__tests__/format.test.js` | Currency formatting for GBP, USD, EUR and MVR, and the fallback for an unknown code. `parseAmount` accepts decimals and rejects empty text, letters, zero, negative values and values above one million. `parseDate` accepts a real date, rejects `2026-02-31`, rejects the wrong format and handles leap years. Date key helpers, the round trip between a date key and a Date in local time, and the month step across a year boundary. |
 
 The reducer holds all list logic and has no React or storage imports. This makes
 it possible to test the state changes directly.
@@ -40,7 +40,7 @@ target the rejection cases more than the happy path.
 | 11 | Dark mode | Settings, Appearance, tap Dark | Every screen, the header and the tab bar change at once | Pass |
 | 12 | Currency change | Settings, Currency, tap USD | Every amount in the app shows the $ symbol | Pass |
 | 13 | Empty amount | Open the Add modal, tap Save with no amount | The banner "Enter an amount" appears, the Save button stays reachable, and the app does not crash | Pass |
-| 14 | Impossible date | Enter the date `2026-02-31` and Save | The message "That date does not exist" appears and nothing is saved | Pass |
+| 14 | Impossible date | Try to choose 31 February in the calendar | The calendar offers no such day, so the case cannot arise through the UI. `parseDate` still guards anything written to storage, and its unit test covers the rejection | Pass |
 | 15 | Clear all expenses | Settings, Clear all expenses, tap Delete | The list is empty and the "No expenses yet" state returns | Pass |
 | 16 | Add opens as a modal | Tap "Add expense" on the Expenses tab | The Add form opens as a sheet over the tabs, and the tab bar holds three tabs only | Pass |
 | 17 | Maldivian Rufiyaa | Settings, Currency, tap MVR | Every amount shows the drawn rufiyaa sign in front of the digits | Pass |
@@ -56,6 +56,9 @@ target the rejection cases more than the happy path.
 | 27 | Currency conversion | With expenses recorded in MVR, switch to USD | The month total falls from 213.44 to 13.84, and every row converts with it | Pass |
 | 28 | The budget converts too | Switch back to MVR | The budget of 400 dollars reads as 6168.00 rufiyaa, and the percentage stays the same | Pass |
 | 29 | The entered figure survives | Switch currency twice and return to the first one | Every amount reads exactly as it was entered | Pass |
+| 30 | The date picker opens | Open the Add modal and tap the date | A calendar opens below the field, in the colours of the current theme | Pass |
+| 31 | Choosing a day | Tap 11 in the calendar | The field reads "11 Aug 2026" and the calendar marks that day | Pass |
+| 32 | The quick buttons still work | Tap "Yesterday" | The field reads the date of yesterday and the calendar closes | Pass |
 
 ## Defects found and fixed
 
