@@ -23,7 +23,7 @@ import { formatDate, fromDateKey, parseAmount, parseDate, toDateKey } from '../u
 /**
  * Shared add/edit form.
  *
- * Both the Add tab and the Edit screen render this same component, so the
+ * Both the Add screen and the Edit screen render this same component, so the
  * validation rules only exist in one place.
  */
 export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDelete }) {

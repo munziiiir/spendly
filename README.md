@@ -2,7 +2,7 @@
 
 Spendly is an offline expense tracker for Android and iOS, built with React Native
 and Expo. You record what you spend, sort it into categories, and see where your
-money goes each month against a budget you set. The app has no backend and no
+money goes each month against a budget you set. There is no backend and no
 account: every expense stays in the storage of your own phone.
 
 ---
@@ -14,7 +14,7 @@ v24.10.0. There is no API key, no backend and no environment file to set up.
 
 ```bash
 git clone <repository-url>
-cd mobile
+cd spendly
 npm install
 npx expo start
 ```
@@ -28,6 +28,9 @@ To run the tests:
 ```bash
 npm test
 ```
+
+The full test report, including the manual test runs, is in
+[TESTING.md](TESTING.md).
 
 ---
 
@@ -85,7 +88,7 @@ npm test
   </tr>
   <tr>
     <td align="center">
-      <img src="assets/screenshots/stats.png" width="250" alt="The statistics screen, category view"><br>
+      <img src="assets/screenshots/stats.png" width="250" alt="The statistics screen, category view with one category open"><br>
       <b>Stats — Categories</b><br>
       The budget for the month, and bars that open to show the expenses behind them.
     </td>
@@ -97,24 +100,57 @@ npm test
   </tr>
   <tr>
     <td align="center">
+      <img src="assets/screenshots/stats-daily.png" width="250" alt="The statistics screen, daily bar chart"><br>
+      <b>Stats — Daily</b><br>
+      One bar for every day of the month, with the peak figure and the busiest day.
+    </td>
+    <td align="center">
       <img src="assets/screenshots/stats-trend.png" width="250" alt="The statistics screen, trend line"><br>
       <b>Stats — Trend</b><br>
       Spending over the six months that end with the selected month.
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <img src="assets/screenshots/settings.png" width="250" alt="The settings screen"><br>
       <b>Settings</b><br>
       Theme, currency, the default budget and the clear-all action.
     </td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2">
+    <td align="center">
       <img src="assets/screenshots/empty-state.png" width="250" alt="The empty state of the expenses list"><br>
       <b>Empty state</b><br>
       What a new user sees before the first expense.
     </td>
   </tr>
 </table>
+
+---
+
+## How it works
+
+**Navigation.** `app/_layout.js` mounts both providers and a root stack. Inside
+it, `app/(tabs)/_layout.js` holds the three tabs. Because the add and edit
+screens belong to the root stack and not to the tab group, they open as modals
+over the tab bar: adding an expense is an action, not a fourth place to browse.
+
+**State.** The expense list lives in `ExpensesContext`, which drives every change
+through the pure reducer in `src/context/expensesReducer.js`. The reducer keeps
+the list sorted newest first, so no screen has to sort on render. Settings sit in
+their own context because they change far less often, and keeping them apart
+stops a currency change from re-rendering the whole list through one value
+object.
+
+**Persistence.** Each context reads its key from AsyncStorage once on mount and
+writes back after every change. The write is held back until that first read has
+finished, so a slow or failed read can never save an empty list over real data.
+`src/utils/storage.js` wraps every call in try/catch and returns an `ok` flag
+instead of throwing.
+
+**Currency.** An expense stores the amount as it was typed and the currency it
+was typed in. Nothing is rewritten when the user switches currency; the
+conversion happens on the way to the screen, in `src/constants/rates.js`. Budgets
+are held in one base currency for the same reason, so a budget of 400 keeps its
+value rather than its digits.
 
 ---
 
@@ -206,16 +242,19 @@ reducer also paid off twice: the screens stay simple, and I could test every
 state change without a renderer or a storage mock.
 
 Persistence looked like the easy part and was the part I trusted least. Writing
-to storage on every change is simple, but I had to be careful not to write during
-the first load, because that would save an empty list over real data. Testing it
-properly meant a force-quit and a restart, not a reload. A reload keeps the
-process alive and proves nothing.
+to storage on every change is simple, but the write has to wait for the first
+read to finish. I got that half right at first: I held the write back while the
+read was still running, but not when the read failed, which left a path where an
+unreadable file could be saved over with an empty list. Testing it properly meant
+a force-quit and a restart, not a reload. A reload keeps the process alive and
+proves nothing.
 
-Testing found two real defects. A unit test showed that `parseAmount` stripped the
-minus sign before the "more than zero" check, so `-4` became `4`. Manual testing
-showed that a date error stayed on screen after I corrected the date. Both were
-one-line fixes, and neither would have shown up if I had only clicked through the
-happy path.
+Testing found real defects that clicking through the happy path never would have.
+A unit test showed that `parseAmount` stripped the minus sign before the "more
+than zero" check, so `-4` became `4`. Manual testing showed that a date error
+stayed on screen after I corrected the date. Reading the code again at the end
+found a migration that could never run, because the block that filled in missing
+settings supplied the very version number the check was looking for.
 
 File-based routing caught me a second time when I moved the add form out of the
 tabs and into a modal. I left a placeholder route at `app/(tabs)/add.js` and put

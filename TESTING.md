@@ -71,9 +71,15 @@ target the rejection cases more than the happy path.
 | A tap on the budget field pinned the month to the default | The field commits on blur, and it already held the default figure, so a tap and a tap away wrote that figure as an override | The commit stops when the month follows the default and the figure did not change |
 | The rufiyaa sign appeared after the digits | Thaana Raa is a right-to-left letter, so it turned the whole line right-to-left | The sign is now drawn with SVG, so no letter and no text direction is involved |
 | The budget did not convert with the expenses | Budgets were plain numbers with no currency, so 400 stayed 400 after a switch and no longer meant the same money | Budgets are held in one base currency and converted for display, with a one-time migration of saved settings |
+| A failed read of the saved expenses could save an empty list over the real one | The write-back effect only waited for the initial load to finish. A read that failed also ended the load, so the effect ran with an empty list in memory and wrote it | The provider will not write until the saved list has been read, or until the user changes something on purpose |
+| The one-time migration of saved budgets could never run | The load fills in any missing setting from the defaults before the version check, and the defaults carry the current version number, so an older saved file always looked current | The version is read from the saved file itself, before the defaults are merged in |
+| The "Use default" button sat outside its card on a narrower screen | The budget field beside it would not shrink below the width of its own text | The field is allowed to shrink, so the row fits the card at any width |
+| The month labels under the trend line did not sit under their own points | The line placed its points from edge to edge while the labels were spread by the layout, so the two never matched | The chart gives each month an equal column and puts the point in the middle of it, and the labels use the same columns |
 
-The first defect came from the unit tests. The others came from the manual
-tests.
+The first defect came from the unit tests. The next batch came from the manual
+tests. The last four came from reading the whole codebase again before
+submission, and from checking each screen at a narrower screen width than the
+one the manual tests ran on.
 
 ## A note on Expo Go
 
@@ -88,3 +94,8 @@ project clears it every time.
 `ok` flag. A read failure gives an empty list instead of a crash on launch, and
 the app shows an error banner. The provider also filters the loaded array, so a
 damaged storage value cannot put a broken record into the list.
+
+An empty list in memory after a failed read is not the same thing as an empty
+list the user asked for, so the provider will not write one back. Saving resumes
+as soon as the read succeeds, or as soon as the user adds, edits, deletes or
+clears something themselves.
