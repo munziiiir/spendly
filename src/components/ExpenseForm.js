@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   symbol: { marginRight: spacing.sm, justifyContent: 'center' },
-  amountInput: { flex: 1, fontSize: 32, fontWeight: '700', paddingVertical: spacing.md },
+  amountInput: { flex: 1, minWidth: 0, fontSize: 32, fontWeight: '700', paddingVertical: spacing.md },
   input: {
     borderWidth: 1,
     borderRadius: radius.md,

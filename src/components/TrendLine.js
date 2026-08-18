@@ -32,10 +32,13 @@ export default function TrendLine({ monthlyTotals, month }) {
   const max = Math.max(...points.map((point) => point.total));
   const scale = max > 0 ? max : 1;
 
-  const stepX = (WIDTH - PADDING * 2) / (MONTHS - 1);
+  // One equal column per month, with the point in the middle of its column.
+  // The month labels below sit in columns of the same width, so every label
+  // lines up under its own point.
+  const stepX = WIDTH / MONTHS;
   const plot = points.map((point, index) => ({
     ...point,
-    x: PADDING + index * stepX,
+    x: (index + 0.5) * stepX,
     y: HEIGHT - PADDING - (point.total / scale) * (HEIGHT - PADDING * 2),
   }));
 
@@ -106,7 +109,7 @@ const styles = StyleSheet.create({
   scaleRow: { flexDirection: 'row', alignItems: 'center' },
   captionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   scaleText: { fontSize: 12, fontWeight: '600' },
-  axis: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.sm },
-  axisText: { fontSize: 11 },
+  axis: { flexDirection: 'row' },
+  axisText: { flex: 1, fontSize: 11, textAlign: 'center' },
   caption: { fontSize: 12, textAlign: 'center' },
 });

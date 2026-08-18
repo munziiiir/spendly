@@ -113,6 +113,10 @@ const styles = StyleSheet.create({
   editRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   input: {
     flex: 1,
+    // Without this the field refuses to shrink below its own text, and the
+    // "Use default" button beside it is pushed off the edge of the card on a
+    // narrow screen.
+    minWidth: 0,
     borderWidth: 1,
     borderRadius: radius.sm,
     padding: spacing.md,

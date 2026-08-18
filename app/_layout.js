@@ -65,6 +65,9 @@ function RootNavigator() {
         screenOptions={{
           headerStyle: { backgroundColor: theme.card },
           headerTitleStyle: { color: theme.text },
+          // Android and web left-align a header title by default. Centring it
+          // keeps the modal headers looking the same on every platform.
+          headerTitleAlign: 'center',
           headerTintColor: theme.brand,
           contentStyle: { backgroundColor: theme.background },
         }}
