@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import {
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -103,13 +102,23 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={styles.flex}>
+      {/*
+        The keyboard is handled by the scroll view itself rather than by a
+        KeyboardAvoidingView wrapper. This form is presented as a modal, and
+        that wrapper measures against the whole window, so on iOS it pads by
+        the height of a keyboard that begins below the modal's own frame and
+        pushes the Save button off screen. `automaticallyAdjustKeyboardInsets`
+        uses the native inset instead, which is measured against the modal.
+        `keyboardDismissMode` matters because the amount field opens a decimal
+        pad, and a decimal pad has no return key — without swipe-to-dismiss
+        there is no way for the user to close it.
+      */}
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
         showsVerticalScrollIndicator={false}
       >
         <ErrorBanner message={errors.amount} />
@@ -161,7 +170,8 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
                     styles.gridLabel,
                     { color: selected ? theme.text : theme.textMuted },
                   ]}
-                  numberOfLines={1}
+                  numberOfLines={2}
+                  maxFontSizeMultiplier={1.4}
                 >
                   {item.label}
                 </Text>
@@ -178,6 +188,7 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
           placeholder="e.g. Lunch with Sam"
           placeholderTextColor={theme.textMuted}
           maxLength={60}
+          returnKeyType="done"
           accessibilityLabel="Expense note"
           style={[
             styles.input,
@@ -253,7 +264,7 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
           </Pressable>
         )}
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -290,15 +301,20 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  // A fixed minimum height keeps the three columns level once a label wraps
+  // onto a second line at larger text sizes.
   gridItem: {
     width: '31.5%',
+    minHeight: 74,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 1,
   },
-  gridLabel: { fontSize: 11, fontWeight: '600' },
+  gridLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
   quickRow: { flexDirection: 'row', gap: spacing.sm },
   dateButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   dateText: { flex: 1, fontSize: 15, fontWeight: '600' },
