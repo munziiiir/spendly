@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { useTheme } from '../context/SettingsContext';
 import { radius, spacing } from '../theme';
+import { haptics } from '../utils/haptics';
 
 /**
  * The main call to action of the app: record an expense.
@@ -19,7 +20,10 @@ export default function AddExpenseButton() {
 
   return (
     <Pressable
-      onPress={() => router.push('/expense/new')}
+      onPress={() => {
+        haptics.pressed();
+        router.push('/expense/new');
+      }}
       accessibilityRole="button"
       accessibilityLabel="Add an expense"
       style={({ pressed }) => [

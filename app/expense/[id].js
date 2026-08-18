@@ -8,6 +8,7 @@ import ScreenContainer from '../../src/components/ScreenContainer';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useTheme } from '../../src/context/SettingsContext';
 import { spacing } from '../../src/theme';
+import { haptics } from '../../src/utils/haptics';
 
 /**
  * Edit screen — a dynamic route pushed on top of the tabs as a modal.
@@ -64,6 +65,7 @@ export default function EditExpenseScreen() {
         text: 'Delete',
         style: 'destructive',
         onPress: () => {
+          haptics.deleted();
           deleteExpense(expense.id);
           router.back();
         },

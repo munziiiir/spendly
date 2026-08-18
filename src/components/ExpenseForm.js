@@ -18,6 +18,7 @@ import { CATEGORIES } from '../constants/categories';
 import { convert } from '../constants/rates';
 import { useSettings, useTheme } from '../context/SettingsContext';
 import { radius, spacing } from '../theme';
+import { haptics } from '../utils/haptics';
 import { formatDate, fromDateKey, parseAmount, parseDate, toDateKey } from '../utils/format';
 
 /**
@@ -52,7 +53,12 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
     if (!amountResult.ok) nextErrors.amount = amountResult.error;
     if (!dateResult.ok) nextErrors.date = dateResult.error;
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0) {
+      haptics.failed();
+      return;
+    }
+
+    haptics.saved();
 
     onSubmit({
       amount: amountResult.value,
@@ -135,7 +141,10 @@ export default function ExpenseForm({ initialValue, submitLabel, onSubmit, onDel
             return (
               <Pressable
                 key={item.id}
-                onPress={() => setCategory(item.id)}
+                onPress={() => {
+                  haptics.selected();
+                  setCategory(item.id);
+                }}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
                 style={[
