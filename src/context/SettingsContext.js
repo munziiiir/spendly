@@ -47,14 +47,17 @@ export function SettingsProvider({ children }) {
     (async () => {
       const result = await loadJSON(STORAGE_KEY, DEFAULT_SETTINGS);
       if (cancelled) return;
+      const stored = result.value || {};
       // Merge rather than replace, so a settings key added in a later version
       // still gets its default instead of coming back undefined.
-      const merged = { ...DEFAULT_SETTINGS, ...(result.value || {}) };
+      const merged = { ...DEFAULT_SETTINGS, ...stored };
 
       // Budgets saved before this version were held in whatever currency the
       // user had chosen. Convert them to the base currency once, and record
-      // that it happened so it never runs twice.
-      if (merged.budgetVersion !== BUDGET_VERSION) {
+      // that it happened so it never runs twice. The version has to be read
+      // from the saved value, not from the merge: the merge would supply the
+      // current version as a default and the migration would never run.
+      if (stored.budgetVersion !== BUDGET_VERSION) {
         const from = merged.currency || 'GBP';
         merged.monthlyBudget = convert(merged.monthlyBudget, from, BASE_CURRENCY);
         merged.monthlyBudgets = Object.fromEntries(
