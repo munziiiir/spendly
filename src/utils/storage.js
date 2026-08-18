@@ -29,13 +29,3 @@ export async function saveJSON(key, value) {
     return { ok: false, error };
   }
 }
-
-export async function removeKeys(keys) {
-  try {
-    await AsyncStorage.multiRemove(keys);
-    return { ok: true };
-  } catch (error) {
-    console.warn('[storage] failed to clear keys', error);
-    return { ok: false, error };
-  }
-}

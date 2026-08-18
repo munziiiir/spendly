@@ -87,11 +87,6 @@ export function SettingsProvider({ children }) {
     });
   }, []);
 
-  const resetSettings = useCallback(() => {
-    setSettings(DEFAULT_SETTINGS);
-    saveJSON(STORAGE_KEY, DEFAULT_SETTINGS);
-  }, []);
-
   /** Give one month its own budget. `value` is in the chosen currency. */
   const setBudgetForMonth = useCallback((monthKey, value) => {
     setSettings((current) => {
@@ -157,7 +152,6 @@ export function SettingsProvider({ children }) {
       isDark,
       theme: isDark ? darkTheme : lightTheme,
       updateSetting,
-      resetSettings,
       defaultBudget,
       getBudgetForMonth,
       setBudgetForMonth,
@@ -169,7 +163,6 @@ export function SettingsProvider({ children }) {
       loading,
       isDark,
       updateSetting,
-      resetSettings,
       defaultBudget,
       getBudgetForMonth,
       setBudgetForMonth,
