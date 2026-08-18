@@ -1,7 +1,8 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -71,13 +72,50 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="expense/new"
-          options={{ title: 'Add Expense', presentation: 'modal' }}
+          options={{
+            title: 'Add Expense',
+            presentation: 'modal',
+            headerLeft: () => <HeaderCancel />,
+          }}
         />
         <Stack.Screen
           name="expense/[id]"
-          options={{ title: 'Edit Expense', presentation: 'modal' }}
+          options={{
+            title: 'Edit Expense',
+            presentation: 'modal',
+            headerLeft: () => <HeaderCancel />,
+          }}
         />
       </Stack>
     </>
   );
 }
+
+/**
+ * A visible way out of the two modal screens.
+ *
+ * iOS presents a modal as a sheet, and a sheet has no back arrow — the only
+ * way out is a downward swipe from the top of the card. That gesture is not
+ * discoverable, so the sheet gets an explicit Cancel button as well.
+ */
+function HeaderCancel() {
+  const router = useRouter();
+  const { theme } = useSettings();
+
+  return (
+    <Pressable
+      onPress={() => router.back()}
+      accessibilityRole="button"
+      accessibilityLabel="Close without saving"
+      hitSlop={12}
+      style={({ pressed }) => pressed && styles.pressed}
+    >
+      <Text style={[styles.cancel, { color: theme.brand }]}>Cancel</Text>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  cancel: { fontSize: 17 },
+  pressed: { opacity: 0.6 },
+});
