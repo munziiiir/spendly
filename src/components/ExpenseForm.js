@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -73,6 +74,7 @@ export default function ExpenseForm({
    */
   const scrollRef = useRef(null);
   const fieldTops = useRef({});
+  const focusedField = useRef(null);
 
   function measure(key) {
     return (event) => {
@@ -80,7 +82,7 @@ export default function ExpenseForm({
     };
   }
 
-  function reveal(key) {
+  const reveal = useCallback((key) => {
     // One frame of delay lets the keyboard begin its own animation first, so
     // the two movements run together instead of one after the other.
     requestAnimationFrame(() => {
@@ -88,7 +90,38 @@ export default function ExpenseForm({
       if (typeof y !== 'number') return;
       scrollRef.current?.scrollTo({ y: Math.max(0, y - REVEAL_MARGIN), animated: true });
     });
+  }, []);
+
+  /**
+   * Scrolling on focus alone is not enough on this screen.
+   *
+   * The form is barely taller than the sheet, so before the keyboard arrives
+   * there is almost nothing to scroll: the scroll view clamps the request to
+   * zero and the field does not move. The room to scroll only appears when
+   * `automaticallyAdjustKeyboardInsets` extends the content for the keyboard,
+   * which happens after the focus event.
+   *
+   * So the field is asked for twice — once on focus, which is enough on a page
+   * that can already scroll, and again once the keyboard is up and the room
+   * exists. The second is the one that does the work here.
+   */
+  function focusField(key) {
+    focusedField.current = key;
+    reveal(key);
   }
+
+  useEffect(() => {
+    const shown = Keyboard.addListener('keyboardDidShow', () => {
+      if (focusedField.current) reveal(focusedField.current);
+    });
+    const hidden = Keyboard.addListener('keyboardDidHide', () => {
+      focusedField.current = null;
+    });
+    return () => {
+      shown.remove();
+      hidden.remove();
+    };
+  }, [reveal]);
 
   /**
    * The date picker fades and rises into place instead of appearing whole.
@@ -227,7 +260,7 @@ export default function ExpenseForm({
             <TextInput
               value={amount}
               onChangeText={setAmount}
-              onFocus={() => reveal('amount')}
+              onFocus={() => focusField('amount')}
               placeholder="0.00"
               placeholderTextColor={theme.textMuted}
               keyboardType="decimal-pad"
@@ -288,7 +321,7 @@ export default function ExpenseForm({
           <TextInput
             value={note}
             onChangeText={setNote}
-            onFocus={() => reveal('note')}
+            onFocus={() => focusField('note')}
             placeholder="e.g. Lunch with Sam"
             placeholderTextColor={theme.textMuted}
             maxLength={60}

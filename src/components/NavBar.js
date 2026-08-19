@@ -60,6 +60,12 @@ export default function NavBar({ title, scrollY }) {
   return (
     <Animated.View
       pointerEvents={solid ? 'auto' : 'none'}
+      // An opacity of zero hides a view from the eye but not from VoiceOver.
+      // Without this the screen has two titles in the accessibility tree at
+      // once — this one and the large title — and the reader announces the
+      // name of the tab twice before reaching any content.
+      accessibilityElementsHidden={!solid}
+      importantForAccessibility={solid ? 'auto' : 'no-hide-descendants'}
       style={[
         styles.root,
         {
