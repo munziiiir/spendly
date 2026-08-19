@@ -23,7 +23,7 @@ target the rejection cases more than the happy path.
 ## Manual tests
 
 **Run on:** iPhone 17 simulator, iOS 26.5, Expo Go 57.0.9, Expo SDK 57.
-**Date run:** 17 August 2026. Tests 33 to 40 were added and run on 19 August 2026,
+**Date run:** 17 August 2026. Tests 33 to 45 were added and run on 19 August 2026,
 after the interface was rebuilt around the iOS system look. Tests 1, 3, 6, 7, 11,
 12, 13, 27 and 30 were run again on that date and still pass; their steps below
 name the controls as they are now.
@@ -71,6 +71,10 @@ name the controls as they are now.
 | 39 | The sheet lifts in dark mode | Set the theme to Dark and open the Add sheet | The sheet is lighter than the page behind it, so its edge is visible | Pass |
 | 40 | Every way out of the sheet still works | Open the Add sheet, tap Cancel; open it again and swipe it down | The sheet closes both ways and nothing is saved | Pass |
 | 41 | The compact title takes its own taps | Settings, scroll until a currency row is hidden behind the small title, tap the title | The currency does not change. The bar does not pass the tap to the row it covers | Pass |
+| 42 | The tab bar is glass | Settings, scroll until the red "Clear All Expenses" row passes under the bar | The red row is visibly blurred and bent through the bar, so the effect is the real one and not a flat panel | Pass |
+| 43 | The island floats clear of the content | Any tab, scroll to the very end | The last row scrolls above the bar and stays readable. Nothing is trapped underneath it | Pass |
+| 44 | The tab capsule travels | Tap Expenses, then Settings | The capsule slides the width of the bar rather than jumping between tabs | Pass |
+| 45 | A sheet covers the island | Tap "Add expense" | The sheet covers the whole screen and the tab bar does not show through it | Pass |
 
 ## Defects found and fixed
 

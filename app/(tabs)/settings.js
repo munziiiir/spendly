@@ -8,6 +8,7 @@ import ListGroup from '../../src/components/ListGroup';
 import ListRow from '../../src/components/ListRow';
 import NavBar from '../../src/components/NavBar';
 import ScreenContainer from '../../src/components/ScreenContainer';
+import { useTabBarSpace } from '../../src/components/FloatingTabBar';
 import SegmentedControl from '../../src/components/SegmentedControl';
 import { CURRENCIES } from '../../src/constants/categories';
 import { RATES_TAKEN_ON } from '../../src/constants/rates';
@@ -32,6 +33,7 @@ const THEME_MODES = [
 export default function SettingsScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
   const { currency, themeMode, defaultBudget, updateSetting, setDefaultBudget } = useSettings();
   const { clearAll, expenses } = useExpenses();
 
@@ -98,7 +100,10 @@ export default function SettingsScreen() {
 
       <Animated.ScrollView
         ref={scrollRef}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.sm }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + spacing.sm, paddingBottom: tabBarSpace + spacing.lg },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
@@ -203,7 +208,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl * 2,
   },
   // The segmented control is its own surface, so the card behind it would be
   // a second one. This makes the card carry the control instead of framing it.

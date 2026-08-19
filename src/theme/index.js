@@ -45,6 +45,17 @@ export const lightTheme = {
   // carries a shadow, which is what makes the selected segment read as on top.
   segmentThumb: '#FFFFFF',
 
+  // The capsule behind the selected tab inside the floating bar.
+  //
+  // It has to be translucent. The bar is a pane of glass and the wallpaper
+  // behind it shows through, so a solid fill would read as a sticker laid on
+  // the glass rather than as part of it.
+  glassHighlight: 'rgba(0, 0, 0, 0.07)',
+
+  // What the floating bar falls back to where the glass effect does not
+  // exist: Android, and any iOS before 26.
+  glassFallback: 'rgba(255, 255, 255, 0.92)',
+
   onBrand: '#FFFFFF',
 };
 
@@ -75,6 +86,9 @@ export const darkTheme = {
 
   // In dark mode the thumb is lighter than the track, not white.
   segmentThumb: '#636366',
+
+  glassHighlight: 'rgba(255, 255, 255, 0.16)',
+  glassFallback: 'rgba(28, 28, 30, 0.94)',
 
   onBrand: '#FFFFFF',
 };

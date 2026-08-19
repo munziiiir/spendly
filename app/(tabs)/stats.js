@@ -13,6 +13,7 @@ import Money from '../../src/components/Money';
 import MonthBudgetCard from '../../src/components/MonthBudgetCard';
 import NavBar from '../../src/components/NavBar';
 import ScreenContainer from '../../src/components/ScreenContainer';
+import { useTabBarSpace } from '../../src/components/FloatingTabBar';
 import SegmentedControl from '../../src/components/SegmentedControl';
 import TrendLine from '../../src/components/TrendLine';
 import { CATEGORIES, getCategory } from '../../src/constants/categories';
@@ -49,6 +50,7 @@ export default function StatsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
   const { currency } = useSettings();
   const { expenses, monthlyTotals } = useExpenses();
   const [month, setMonth] = useState(toMonthKey(toDateKey(new Date())));
@@ -122,7 +124,10 @@ export default function StatsScreen() {
 
       <Animated.ScrollView
         ref={scrollRef}
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.sm }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + spacing.sm, paddingBottom: tabBarSpace + spacing.lg },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
@@ -279,7 +284,6 @@ function StatCard({ label, theme, children }) {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
     gap: spacing.md,
   },
   pressed: { opacity: 0.6 },

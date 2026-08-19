@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router/js-tabs';
-import { Platform, StyleSheet } from 'react-native';
 
+import FloatingTabBar from '../../src/components/FloatingTabBar';
 import { useSettings } from '../../src/context/SettingsContext';
 
 /**
@@ -12,32 +12,23 @@ import { useSettings } from '../../src/context/SettingsContext';
  * expense is an action, not a place, so its button lives on the Expenses
  * screen instead of in this bar.
  *
+ * The bar itself is drawn by `FloatingTabBar`: an island of Liquid Glass that
+ * floats over the screens, the way iOS 26 draws one. Because it floats, it
+ * takes no space in the layout, and each screen leaves room for it at the
+ * foot of its content with `useTabBarSpace()`.
+ *
  * No tab draws a header. Each screen renders its own large title inside its
- * scrolling content, the way iOS does, and a compact title fades in over it
- * once the large one has scrolled away. A header supplied by the navigator
- * would sit above that and give the screen two titles.
+ * scrolling content, and a compact title fades in over it once the large one
+ * has scrolled away.
  */
 export default function TabsLayout() {
   const { theme } = useSettings();
 
   return (
     <Tabs
+      tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.brand,
-        tabBarInactiveTintColor: theme.textMuted,
-        tabBarStyle: {
-          backgroundColor: theme.card,
-          borderTopColor: theme.separator,
-          borderTopWidth: StyleSheet.hairlineWidth,
-        },
-        // 10pt medium is the iOS tab label. The default is larger and heavier,
-        // which is what makes a React Native tab bar recognisable as one.
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '500' },
-        tabBarItemStyle: Platform.select({
-          ios: { paddingTop: 4 },
-          default: {},
-        }),
         sceneStyle: { backgroundColor: theme.background },
       }}
     >
