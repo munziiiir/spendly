@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   scale: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   scaleRow: { flexDirection: 'row', alignItems: 'center' },
   captionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  scaleText: { fontSize: 12, fontWeight: '600' },
+  scaleText: { fontSize: 13, fontWeight: '500' },
   axis: { flexDirection: 'row' },
   axisText: { flex: 1, fontSize: 11, textAlign: 'center' },
   caption: { fontSize: 12, textAlign: 'center' },

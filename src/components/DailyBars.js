@@ -69,7 +69,7 @@ export default function DailyBars({ expenses, month }) {
 const styles = StyleSheet.create({
   root: { gap: spacing.sm },
   scale: { flexDirection: 'row', justifyContent: 'space-between' },
-  scaleText: { fontSize: 12, fontWeight: '600' },
+  scaleText: { fontSize: 13, fontWeight: '500' },
   chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 2 },
   column: { flex: 1, justifyContent: 'flex-end' },
   bar: { width: '100%', borderRadius: radius.sm, minHeight: 1 },
