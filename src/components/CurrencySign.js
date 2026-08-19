@@ -12,7 +12,11 @@ import { getCurrencySymbol } from '../constants/categories';
  */
 export default function CurrencySign({ code, size = 20, color, weight = '700' }) {
   if (code === 'MVR') {
-    return <RufiyaaSign size={size * 0.74} color={color} />;
+    // `size` is a font size, and a font size is bigger than the letters drawn
+    // in it. The typed signs beside this one only fill their cap height, so
+    // the drawn sign is matched to that rather than to the full size, or it
+    // reads as the largest sign in the list.
+    return <RufiyaaSign size={size * 0.64} color={color} />;
   }
 
   return (

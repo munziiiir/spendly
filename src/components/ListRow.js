@@ -20,6 +20,7 @@ export default function ListRow({
   icon,
   iconColor,
   iconBackground,
+  leading,
   title,
   subtitle,
   value,
@@ -32,13 +33,16 @@ export default function ListRow({
   children,
 }) {
   const theme = useTheme();
-  const hasIcon = !!icon;
+  // `leading` puts any node in the icon column. The currency rows use it to
+  // show a currency sign, which is drawn text rather than an Ionicons glyph
+  // and so cannot go through `icon`.
+  const hasLead = !!icon || !!leading;
 
   const body = (
     <>
-      {hasIcon && (
+      {hasLead && (
         <View style={[styles.iconWrap, !!iconBackground && { backgroundColor: iconBackground }]}>
-          <Ionicons name={icon} size={19} color={iconColor || theme.brand} />
+          {leading ?? <Ionicons name={icon} size={19} color={iconColor || theme.brand} />}
         </View>
       )}
 
@@ -106,7 +110,7 @@ export default function ListRow({
         <View
           style={[
             styles.separator,
-            { backgroundColor: theme.separator, marginLeft: hasIcon ? 60 : spacing.lg },
+            { backgroundColor: theme.separator, marginLeft: hasLead ? 58 : spacing.lg },
           ]}
         />
       )}
