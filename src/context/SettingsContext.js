@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
-import { RATES, convert } from '../constants/rates';
+import { RATES, convert, convertExact } from '../constants/rates';
 import { darkTheme, lightTheme } from '../theme';
 import { loadJSON, saveJSON } from '../utils/storage';
 
@@ -59,11 +59,11 @@ export function SettingsProvider({ children }) {
       // current version as a default and the migration would never run.
       if (stored.budgetVersion !== BUDGET_VERSION) {
         const from = merged.currency || 'GBP';
-        merged.monthlyBudget = convert(merged.monthlyBudget, from, BASE_CURRENCY);
+        merged.monthlyBudget = convertExact(merged.monthlyBudget, from, BASE_CURRENCY);
         merged.monthlyBudgets = Object.fromEntries(
           Object.entries(merged.monthlyBudgets || {}).map(([key, value]) => [
             key,
-            convert(value, from, BASE_CURRENCY),
+            convertExact(value, from, BASE_CURRENCY),
           ])
         );
         merged.budgetVersion = BUDGET_VERSION;
@@ -94,7 +94,7 @@ export function SettingsProvider({ children }) {
         ...current,
         monthlyBudgets: {
           ...current.monthlyBudgets,
-          [monthKey]: convert(value, current.currency, BASE_CURRENCY),
+          [monthKey]: convertExact(value, current.currency, BASE_CURRENCY),
         },
       };
       saveJSON(STORAGE_KEY, next);
@@ -107,7 +107,7 @@ export function SettingsProvider({ children }) {
     setSettings((current) => {
       const next = {
         ...current,
-        monthlyBudget: convert(value, current.currency, BASE_CURRENCY),
+        monthlyBudget: convertExact(value, current.currency, BASE_CURRENCY),
       };
       saveJSON(STORAGE_KEY, next);
       return next;

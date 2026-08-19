@@ -37,3 +37,22 @@ export function convert(amount, from, to) {
 
   return Math.round(((amount / fromRate) * toRate + Number.EPSILON) * 100) / 100;
 }
+
+/**
+ * The same conversion, but without the rounding.
+ *
+ * Use this when the result goes into storage instead of onto the screen. A
+ * stored figure that is rounded loses money each time it changes currency: a
+ * budget of 18000 rufiyaa became 1167.32 dollars, and came back out as
+ * 18000.07. The screens round the figure again when they show it.
+ */
+export function convertExact(amount, from, to) {
+  if (!Number.isFinite(amount)) return 0;
+  if (from === to) return amount;
+
+  const fromRate = RATES[from];
+  const toRate = RATES[to];
+  if (!fromRate || !toRate) return amount;
+
+  return (amount / fromRate) * toRate;
+}

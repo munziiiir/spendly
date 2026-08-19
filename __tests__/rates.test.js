@@ -1,4 +1,4 @@
-import { RATES, convert } from '../src/constants/rates';
+import { RATES, convert, convertExact } from '../src/constants/rates';
 
 /**
  * Tests for the fixed exchange rates.
@@ -38,5 +38,28 @@ describe('convert', () => {
     ['GBP', 'USD', 'EUR', 'MVR'].forEach((code) => {
       expect(RATES[code]).toBeGreaterThan(0);
     });
+  });
+});
+
+describe('convertExact', () => {
+  // A budget of 18000 rufiyaa came back as 18000.07, because the app rounded
+  // the dollar figure before it saved it. The store must keep the exact figure.
+  it('survives a round trip through the base currency', () => {
+    [18000, 21000, 500].forEach((amount) => {
+      const stored = convertExact(amount, 'MVR', 'USD');
+      expect(convert(stored, 'USD', 'MVR')).toBe(amount);
+    });
+  });
+
+  it('does not round the result', () => {
+    expect(convertExact(18000, 'MVR', 'USD')).toBeCloseTo(18000 / RATES.MVR, 10);
+  });
+
+  it('returns zero for an amount that is not a number', () => {
+    expect(convertExact(undefined, 'USD', 'MVR')).toBe(0);
+  });
+
+  it('leaves the amount alone for an unknown currency', () => {
+    expect(convertExact(10, 'XYZ', 'MVR')).toBe(10);
   });
 });

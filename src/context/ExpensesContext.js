@@ -9,7 +9,7 @@ import {
 } from 'react';
 
 import { expensesReducer, initialExpensesState } from './expensesReducer';
-import { convert } from '../constants/rates';
+import { convertExact } from '../constants/rates';
 import { loadJSON, saveJSON } from '../utils/storage';
 import { toMonthKey } from '../utils/format';
 
@@ -123,7 +123,8 @@ export function ExpensesProvider({ children }) {
   const monthlyTotals = useMemo(() => {
     return state.items.reduce((totals, item) => {
       const key = toMonthKey(item.date);
-      totals[key] = (totals[key] || 0) + convert(item.amount, item.currency || 'USD', 'USD');
+      totals[key] =
+        (totals[key] || 0) + convertExact(item.amount, item.currency || 'USD', 'USD');
       return totals;
     }, {});
   }, [state.items]);
