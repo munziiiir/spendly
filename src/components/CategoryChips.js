@@ -1,10 +1,19 @@
-import { ScrollView, StyleSheet, Text, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { ScrollView, StyleSheet, Text, Pressable, View } from 'react-native';
 
 import { CATEGORIES } from '../constants/categories';
 import { useTheme } from '../context/SettingsContext';
-import { radius, spacing } from '../theme';
+import { continuous, radius, spacing } from '../theme';
+import { haptics } from '../utils/haptics';
 
-/** Horizontal filter bar on the Home screen. `value` of null means "All". */
+/**
+ * Horizontal filter bar on the Home screen. `value` of null means "All".
+ *
+ * An unselected chip is a plain grey fill rather than an outline. iOS uses
+ * fills for this — an outlined chip reads as a button waiting to be pressed,
+ * and there are eight of them, so eight outlines make the row look busier than
+ * the list it filters.
+ */
 export default function CategoryChips({ value, onChange }) {
   const theme = useTheme();
   const options = [{ id: null, label: 'All', color: theme.brand }, ...CATEGORIES];
@@ -20,36 +29,57 @@ export default function CategoryChips({ value, onChange }) {
         return (
           <Pressable
             key={option.id ?? 'all'}
-            onPress={() => onChange(option.id)}
+            onPress={() => {
+              haptics.selected();
+              onChange(option.id);
+            }}
             accessibilityRole="button"
             accessibilityState={{ selected }}
-            style={[
+            accessibilityLabel={`${option.label} filter`}
+            style={({ pressed }) => [
               styles.chip,
-              {
-                backgroundColor: selected ? option.color : theme.card,
-                borderColor: selected ? option.color : theme.border,
-              },
+              continuous,
+              { backgroundColor: selected ? option.color : theme.surface },
+              pressed && styles.pressed,
             ]}
           >
+            {!!option.icon && (
+              <Ionicons
+                name={option.icon}
+                size={14}
+                color={selected ? '#FFFFFF' : option.color}
+              />
+            )}
             <Text
-              style={[styles.label, { color: selected ? '#FFFFFF' : theme.textMuted }]}
+              style={[styles.label, { color: selected ? '#FFFFFF' : theme.text }]}
+              maxFontSizeMultiplier={1.4}
             >
               {option.label}
             </Text>
           </Pressable>
         );
       })}
+      {/* Keeps the last chip clear of the screen edge when the row is scrolled
+          to its end. */}
+      <View style={styles.tailSpacer} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { gap: spacing.sm, paddingVertical: spacing.sm },
+  row: { gap: spacing.sm, paddingVertical: spacing.sm, alignItems: 'center' },
   chip: {
-    paddingHorizontal: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs + 2,
+    paddingHorizontal: spacing.md + 2,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
-    borderWidth: 1,
+    minHeight: 34,
   },
-  label: { fontSize: 13, fontWeight: '600' },
+  // White on a filled chip in both themes: the fill is a saturated colour in
+  // light and dark alike, so the label does not follow the theme here.
+  label: { fontSize: 14, fontWeight: '500' },
+  pressed: { opacity: 0.6 },
+  tailSpacer: { width: spacing.xs },
 });

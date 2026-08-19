@@ -84,10 +84,10 @@ const styles = StyleSheet.create({
   root: { alignItems: 'center', gap: spacing.lg },
   chart: { width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' },
   centre: { position: 'absolute', alignItems: 'center' },
-  centreValue: { fontSize: 20, fontWeight: '800' },
+  centreValue: { fontSize: 22, fontWeight: '700' },
   centreLabel: { fontSize: 12 },
   legend: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.md },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   swatch: { width: 10, height: 10, borderRadius: 5 },
-  legendText: { fontSize: 12, fontWeight: '600' },
+  legendText: { fontSize: 13, fontWeight: '400' },
 });

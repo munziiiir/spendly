@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   barLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   barValue: { flexDirection: 'row', alignItems: 'center' },
   barName: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  barText: { fontSize: 13, fontWeight: '600' },
+  barText: { fontSize: 13, fontWeight: '500' },
   track: { height: 10, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: radius.pill },
   details: {
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   detailBody: { flex: 1 },
-  detailTitle: { fontSize: 14, fontWeight: '600' },
+  detailTitle: { fontSize: 15, fontWeight: '400' },
   detailDate: { fontSize: 12 },
-  detailAmount: { fontSize: 14, fontWeight: '700' },
+  detailAmount: { fontSize: 15, fontWeight: '600' },
 });

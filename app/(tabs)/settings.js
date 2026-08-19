@@ -1,14 +1,20 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import CurrencySign from '../../src/components/CurrencySign';
+import LargeTitle from '../../src/components/LargeTitle';
+import ListGroup from '../../src/components/ListGroup';
+import ListRow from '../../src/components/ListRow';
+import NavBar from '../../src/components/NavBar';
 import ScreenContainer from '../../src/components/ScreenContainer';
+import SegmentedControl from '../../src/components/SegmentedControl';
 import { CURRENCIES } from '../../src/constants/categories';
 import { RATES_TAKEN_ON } from '../../src/constants/rates';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useSettings, useTheme } from '../../src/context/SettingsContext';
-import { radius, spacing } from '../../src/theme';
+import { spacing } from '../../src/theme';
+import { haptics } from '../../src/utils/haptics';
 
 const THEME_MODES = [
   { id: 'system', label: 'System' },
@@ -25,8 +31,33 @@ const THEME_MODES = [
  */
 export default function SettingsScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { currency, themeMode, defaultBudget, updateSetting, setDefaultBudget } = useSettings();
   const { clearAll, expenses } = useExpenses();
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  /**
+   * The budget field sits near the foot of a long screen, so the keyboard
+   * covers it. The scroll view is told where the field is when it is laid out
+   * and scrolls it up on focus.
+   */
+  const scrollRef = useRef(null);
+  const budgetTop = useRef(0);
+
+  // The compact title bar floats over the top of the page, so a field scrolled
+  // to the very top would land underneath it. The clearance is the height of
+  // that bar plus a little air.
+  const revealMargin = insets.top + 44 + spacing.md;
+
+  function revealBudget() {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, budgetTop.current - revealMargin),
+        animated: true,
+      });
+    });
+  }
 
   // The budget field holds text while the user types, and only commits a
   // number on blur. Settings hydrate from storage after the first render, so
@@ -49,201 +80,141 @@ export default function SettingsScreen() {
       `This deletes all ${expenses.length} expenses from this device. It cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => clearAll() },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            haptics.deleted();
+            clearAll();
+          },
+        },
       ]
     );
   }
 
   return (
     <ScreenContainer edges={[]}>
-      <ScrollView
-        contentContainerStyle={styles.content}
+      <NavBar title="Settings" scrollY={scrollY} />
+
+      <Animated.ScrollView
+        ref={scrollRef}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.sm }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
+        scrollEventThrottle={16}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: true,
+        })}
       >
-        {/* Appearance */}
-        <Section title="Appearance" theme={theme}>
-          <Text style={[styles.hint, { color: theme.textMuted }]}>
-            "System" follows the light or dark setting of your phone.
-          </Text>
-          <View style={[styles.segment, { backgroundColor: theme.surface }]}>
-            {THEME_MODES.map((mode) => {
-              const selected = themeMode === mode.id;
-              return (
-                <Pressable
-                  key={mode.id}
-                  onPress={() => updateSetting('themeMode', mode.id)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={`${mode.label} theme`}
-                  style={[
-                    styles.segmentItem,
-                    selected && { backgroundColor: theme.brand },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      { color: selected ? theme.onBrand : theme.textMuted },
-                    ]}
-                  >
-                    {mode.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Section>
+        <LargeTitle title="Settings" />
 
-        {/* Currency */}
-        <Section title="Currency" theme={theme}>
-          {CURRENCIES.map((item, index) => {
-            const selected = currency === item.code;
-            return (
-              <Pressable
-                key={item.code}
-                onPress={() => updateSetting('currency', item.code)}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                style={[
-                  styles.row,
-                  index > 0 && { borderTopWidth: 1, borderTopColor: theme.border },
-                ]}
-              >
-                <View style={styles.rowSymbol}>
-                  <CurrencySign code={item.code} size={20} color={theme.text} />
-                </View>
-                <View style={styles.rowBody}>
-                  <Text style={[styles.rowTitle, { color: theme.text }]}>{item.code}</Text>
-                  <Text style={[styles.rowSubtitle, { color: theme.textMuted }]}>
-                    {item.label}
-                  </Text>
-                </View>
-                {selected && <Ionicons name="checkmark" size={20} color={theme.brand} />}
-              </Pressable>
-            );
-          })}
-
-          <Text style={[styles.hint, { color: theme.textMuted }]}>
-            Every expense keeps the currency you entered it in. The app converts the amounts
-            for display, at fixed rates taken on {RATES_TAKEN_ON}. It cannot check a live
-            rate, because it works offline.
-          </Text>
-        </Section>
-
-        {/* Monthly budget */}
-        <Section title="Monthly budget" theme={theme}>
-          <Text style={[styles.hint, { color: theme.textMuted }]}>
-            Every month uses this figure unless you give that month a budget of its own on
-            the Stats tab. Set it to 0 to hide the budget bar.
-          </Text>
-          <TextInput
-            value={budgetText}
-            onChangeText={setBudgetText}
-            onBlur={commitBudget}
-            onSubmitEditing={commitBudget}
-            keyboardType="decimal-pad"
-            returnKeyType="done"
-            placeholder="0"
-            placeholderTextColor={theme.textMuted}
-            accessibilityLabel="Monthly budget amount"
-            style={[
-              styles.input,
-              { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text },
-            ]}
+        <ListGroup
+          title="Appearance"
+          footer={'"System" follows the light or dark setting of your phone.'}
+          style={styles.plainCard}
+        >
+          <SegmentedControl
+            options={THEME_MODES}
+            value={themeMode}
+            onChange={(value) => updateSetting('themeMode', value)}
+            accessibilityLabelSuffix=" theme"
           />
-        </Section>
+        </ListGroup>
 
-        {/* Data */}
-        <Section title="Data" theme={theme}>
-          <Pressable
-            onPress={confirmClear}
-            accessibilityRole="button"
-            accessibilityLabel="Clear all expenses"
-            style={({ pressed }) => [
-              styles.destructive,
-              { borderColor: theme.danger },
-              pressed && { opacity: 0.7 },
-            ]}
+        <ListGroup
+          title="Currency"
+          footer={`Every expense keeps the currency you entered it in. The app converts the amounts for display, at fixed rates taken on ${RATES_TAKEN_ON}. It cannot check a live rate, because it works offline.`}
+        >
+          {CURRENCIES.map((item, index) => (
+            <ListRow
+              key={item.code}
+              title={item.code}
+              subtitle={item.label}
+              selected={currency === item.code}
+              last={index === CURRENCIES.length - 1}
+              accessibilityLabel={`${item.label}, ${item.code}`}
+              onPress={() => {
+                haptics.selected();
+                updateSetting('currency', item.code);
+              }}
+            >
+              {/* The sign sits on the trailing edge so the four rows line up
+                  on their labels rather than on signs of different widths. */}
+              <View style={styles.sign}>
+                <CurrencySign code={item.code} size={19} color={theme.textMuted} weight="400" />
+              </View>
+            </ListRow>
+          ))}
+        </ListGroup>
+
+        <View onLayout={(event) => (budgetTop.current = event.nativeEvent.layout.y)}>
+          <ListGroup
+            title="Monthly budget"
+            footer="Every month uses this figure unless you give that month a budget of its own on the Stats tab. Set it to 0 to hide the budget bar."
           >
-            <Ionicons name="trash-outline" size={18} color={theme.danger} />
-            <Text style={[styles.destructiveText, { color: theme.danger }]}>
-              Clear all expenses
-            </Text>
-          </Pressable>
-        </Section>
+            <ListRow title="Budget" last>
+              <View style={styles.budgetField}>
+                <CurrencySign code={currency} size={17} color={theme.textMuted} weight="400" />
+                <TextInput
+                  value={budgetText}
+                  onChangeText={setBudgetText}
+                  onFocus={revealBudget}
+                  onBlur={commitBudget}
+                  onSubmitEditing={commitBudget}
+                  keyboardType="decimal-pad"
+                  returnKeyType="done"
+                  placeholder="0"
+                  placeholderTextColor={theme.textMuted}
+                  accessibilityLabel="Monthly budget amount"
+                  style={[styles.budgetInput, { color: theme.text }]}
+                />
+              </View>
+            </ListRow>
+          </ListGroup>
+        </View>
 
-        {/* About */}
-        <Section title="About" theme={theme}>
-          <Text style={[styles.aboutName, { color: theme.text }]}>Spendly</Text>
-          <Text style={[styles.hint, { color: theme.textMuted }]}>Version 1.0.0</Text>
-          <Text style={[styles.hint, { color: theme.textMuted }]}>
-            Spendly works offline. All data stays on this device and is never sent anywhere.
-          </Text>
-        </Section>
-      </ScrollView>
+        <ListGroup title="Data">
+          <ListRow
+            title="Clear All Expenses"
+            destructive
+            last
+            onPress={confirmClear}
+            accessibilityLabel="Clear all expenses"
+            icon="trash"
+            iconColor="#FFFFFF"
+            iconBackground={theme.danger}
+          />
+        </ListGroup>
+
+        <ListGroup title="About" footer="Spendly works offline. All data stays on this device and is never sent anywhere.">
+          <ListRow title="Spendly" value="Version 1.0.0" last />
+        </ListGroup>
+
+        <Text style={[styles.colophon, { color: theme.textMuted }]}>
+          {expenses.length} {expenses.length === 1 ? 'expense' : 'expenses'} stored on this device
+        </Text>
+      </Animated.ScrollView>
     </ScreenContainer>
   );
 }
 
-/** One titled card. Keeps every section of the screen visually identical. */
-function Section({ title, theme, children }) {
-  return (
-    <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>{title}</Text>
-      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        {children}
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg },
-  section: { gap: spacing.sm },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+  content: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl * 2,
   },
-  card: { borderRadius: radius.md, borderWidth: 1, padding: spacing.lg, gap: spacing.md },
-  hint: { fontSize: 13, lineHeight: 18 },
-  segment: { flexDirection: 'row', borderRadius: radius.sm, padding: spacing.xs },
-  segmentItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderRadius: radius.sm,
+  // The segmented control is its own surface, so the card behind it would be
+  // a second one. This makes the card carry the control instead of framing it.
+  plainCard: { backgroundColor: 'transparent', borderRadius: 0 },
+  sign: { minWidth: 26, alignItems: 'flex-end' },
+  budgetField: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  budgetInput: {
+    fontSize: 17,
+    minWidth: 90,
+    textAlign: 'right',
+    paddingVertical: spacing.xs,
   },
-  segmentText: { fontSize: 14, fontWeight: '700' },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  rowSymbol: { width: 26, alignItems: 'center', justifyContent: 'center' },
-  rowBody: { flex: 1 },
-  rowTitle: { fontSize: 15, fontWeight: '600' },
-  rowSubtitle: { fontSize: 12 },
-  input: {
-    borderWidth: 1,
-    borderRadius: radius.sm,
-    padding: spacing.md,
-    fontSize: 18,
-    fontWeight: '700',
-    minHeight: 48,
-  },
-  destructive: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.md,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-  },
-  destructiveText: { fontSize: 15, fontWeight: '600' },
-  aboutName: { fontSize: 18, fontWeight: '800' },
+  colophon: { fontSize: 12, textAlign: 'center', marginTop: spacing.sm },
 });

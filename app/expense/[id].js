@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import EmptyState from '../../src/components/EmptyState';
 import ExpenseForm from '../../src/components/ExpenseForm';
 import ScreenContainer from '../../src/components/ScreenContainer';
+import SheetHeader from '../../src/components/SheetHeader';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useTheme } from '../../src/context/SettingsContext';
 import { spacing } from '../../src/theme';
@@ -31,19 +32,31 @@ export default function EditExpenseScreen() {
 
   const expense = found || lastKnown.current;
 
+  function close() {
+    router.back();
+  }
+
   // Expenses hydrate from storage after the first render, so a deep link into
   // this screen must wait rather than report the expense as missing.
+  //
+  // Both of the states below carry the toolbar as well. The sheet has no
+  // navigation bar of its own, so without it a user who lands on either one
+  // has no visible way back out.
   if (loading) {
     return (
-      <View style={[styles.centre, { backgroundColor: theme.background }]}>
-        <ActivityIndicator size="large" color={theme.brand} />
-      </View>
+      <ScreenContainer edges={[]}>
+        <SheetHeader title="Edit Expense" onCancel={close} />
+        <View style={styles.centre}>
+          <ActivityIndicator size="large" color={theme.brand} />
+        </View>
+      </ScreenContainer>
     );
   }
 
   if (!expense) {
     return (
       <ScreenContainer edges={[]}>
+        <SheetHeader title="Edit Expense" onCancel={close} />
         <EmptyState
           icon="help-circle-outline"
           title="Expense not found"
@@ -55,7 +68,7 @@ export default function EditExpenseScreen() {
 
   function handleSubmit(draft) {
     updateExpense({ ...expense, ...draft });
-    router.back();
+    close();
   }
 
   function handleDelete() {
@@ -67,7 +80,7 @@ export default function EditExpenseScreen() {
         onPress: () => {
           haptics.deleted();
           deleteExpense(expense.id);
-          router.back();
+          close();
         },
       },
     ]);
@@ -77,9 +90,11 @@ export default function EditExpenseScreen() {
     <ScreenContainer edges={[]}>
       <ExpenseForm
         initialValue={expense}
-        submitLabel="Save changes"
+        title="Edit Expense"
+        actionLabel="Save"
         onSubmit={handleSubmit}
         onDelete={handleDelete}
+        onCancel={close}
       />
     </ScreenContainer>
   );

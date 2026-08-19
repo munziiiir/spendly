@@ -1,8 +1,7 @@
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -61,64 +60,26 @@ function RootNavigator() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      {/*
+        Every screen draws its own title, so no route asks for a header here.
+
+        iOS 26 puts each navigation bar button inside a liquid glass capsule.
+        That capsule is meant to float over content, and it did not agree with
+        the flat header colour this app asked for — the two materials met on
+        the same strip of screen and the button looked like a smudge. Rather
+        than fight the system bar, the app now leaves it switched off and draws
+        its own toolbar inside the sheet. One surface, one material, no seam.
+      */}
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: theme.card },
-          headerTitleStyle: { color: theme.text },
-          // Android and web left-align a header title by default. Centring it
-          // keeps the modal headers looking the same on every platform.
-          headerTitleAlign: 'center',
-          headerTintColor: theme.brand,
+          headerShown: false,
           contentStyle: { backgroundColor: theme.background },
         }}
       >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="expense/new"
-          options={{
-            title: 'Add Expense',
-            presentation: 'modal',
-            headerLeft: () => <HeaderCancel />,
-          }}
-        />
-        <Stack.Screen
-          name="expense/[id]"
-          options={{
-            title: 'Edit Expense',
-            presentation: 'modal',
-            headerLeft: () => <HeaderCancel />,
-          }}
-        />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="expense/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="expense/[id]" options={{ presentation: 'modal' }} />
       </Stack>
     </>
   );
 }
-
-/**
- * A visible way out of the two modal screens.
- *
- * iOS presents a modal as a sheet, and a sheet has no back arrow — the only
- * way out is a downward swipe from the top of the card. That gesture is not
- * discoverable, so the sheet gets an explicit Cancel button as well.
- */
-function HeaderCancel() {
-  const router = useRouter();
-  const { theme } = useSettings();
-
-  return (
-    <Pressable
-      onPress={() => router.back()}
-      accessibilityRole="button"
-      accessibilityLabel="Close without saving"
-      hitSlop={12}
-      style={({ pressed }) => pressed && styles.pressed}
-    >
-      <Text style={[styles.cancel, { color: theme.brand }]}>Cancel</Text>
-    </Pressable>
-  );
-}
-
-const styles = StyleSheet.create({
-  cancel: { fontSize: 17 },
-  pressed: { opacity: 0.6 },
-});

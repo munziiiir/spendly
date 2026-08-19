@@ -29,6 +29,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
-  message: { fontSize: 14, textAlign: 'center', lineHeight: 20, maxWidth: 280 },
+  title: { fontSize: 20, fontWeight: '600', textAlign: 'center' },
+  message: { fontSize: 15, textAlign: 'center', lineHeight: 21, maxWidth: 300 },
 });

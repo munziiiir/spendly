@@ -25,7 +25,12 @@ export default function AddExpenseScreen() {
 
   return (
     <ScreenContainer edges={[]}>
-      <ExpenseForm submitLabel="Save expense" onSubmit={handleSubmit} />
+      <ExpenseForm
+        title="New Expense"
+        actionLabel="Add"
+        onSubmit={handleSubmit}
+        onCancel={() => router.back()}
+      />
     </ScreenContainer>
   );
 }

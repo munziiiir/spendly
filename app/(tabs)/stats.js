@@ -1,20 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import CategoryBreakdown from '../../src/components/CategoryBreakdown';
 import CategoryDonut from '../../src/components/CategoryDonut';
 import DailyBars from '../../src/components/DailyBars';
 import EmptyState from '../../src/components/EmptyState';
+import LargeTitle from '../../src/components/LargeTitle';
 import Money from '../../src/components/Money';
 import MonthBudgetCard from '../../src/components/MonthBudgetCard';
+import NavBar from '../../src/components/NavBar';
+import ScreenContainer from '../../src/components/ScreenContainer';
+import SegmentedControl from '../../src/components/SegmentedControl';
 import TrendLine from '../../src/components/TrendLine';
 import { CATEGORIES, getCategory } from '../../src/constants/categories';
 import { convert } from '../../src/constants/rates';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useSettings, useTheme } from '../../src/context/SettingsContext';
-import { radius, spacing } from '../../src/theme';
+import { continuous, radius, spacing } from '../../src/theme';
 import {
   formatDate,
   formatMoney,
@@ -23,6 +28,7 @@ import {
   toDateKey,
   toMonthKey,
 } from '../../src/utils/format';
+import { haptics } from '../../src/utils/haptics';
 
 /** The views the user can switch between. Each one answers a different question. */
 const VIEWS = [
@@ -42,10 +48,28 @@ const VIEWS = [
 export default function StatsScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { currency } = useSettings();
   const { expenses, monthlyTotals } = useExpenses();
   const [month, setMonth] = useState(toMonthKey(toDateKey(new Date())));
   const [view, setView] = useState('categories');
+
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  // The budget field on this screen sits below a month switcher, three stat
+  // cards and a chart, so the keyboard covers it. Same treatment as Settings.
+  const scrollRef = useRef(null);
+  const budgetTop = useRef(0);
+  const revealMargin = insets.top + 44 + spacing.md;
+
+  function revealBudget() {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, budgetTop.current - revealMargin),
+        animated: true,
+      });
+    });
+  }
 
   // Convert once, here. Every total, chart and list below then works on one
   // currency and needs no conversion of its own.
@@ -87,190 +111,217 @@ export default function StatsScreen() {
     router.push(`/expense/${id}`);
   }
 
+  function step(delta) {
+    haptics.selected();
+    setMonth((current) => shiftMonth(current, delta));
+  }
+
   return (
-    <ScrollView
-      style={{ backgroundColor: theme.background }}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      {/* Month switcher */}
-      <View style={[styles.switcher, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Pressable
-          onPress={() => setMonth((m) => shiftMonth(m, -1))}
-          accessibilityRole="button"
-          accessibilityLabel="Previous month"
-          style={styles.arrow}
-        >
-          <Ionicons name="chevron-back" size={22} color={theme.brand} />
-        </Pressable>
+    <ScreenContainer edges={[]}>
+      <NavBar title="Stats" scrollY={scrollY} />
 
-        <Text style={[styles.monthLabel, { color: theme.text }]}>{formatMonth(month)}</Text>
+      <Animated.ScrollView
+        ref={scrollRef}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.sm }]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
+        scrollEventThrottle={16}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: true,
+        })}
+      >
+        <LargeTitle title="Stats" />
 
-        <Pressable
-          onPress={() => setMonth((m) => shiftMonth(m, 1))}
-          accessibilityRole="button"
-          accessibilityLabel="Next month"
-          style={styles.arrow}
-        >
-          <Ionicons name="chevron-forward" size={22} color={theme.brand} />
-        </Pressable>
-      </View>
+        {/* Month switcher */}
+        <View style={[styles.switcher, continuous, { backgroundColor: theme.card }]}>
+          <Pressable
+            onPress={() => step(-1)}
+            accessibilityRole="button"
+            accessibilityLabel="Previous month"
+            hitSlop={8}
+            style={({ pressed }) => [styles.arrow, pressed && styles.pressed]}
+          >
+            <Ionicons name="chevron-back" size={20} color={theme.brand} />
+          </Pressable>
 
-      {/* Headline figures */}
-      <View style={styles.statRow}>
-        <StatCard label="Total" theme={theme}>
-          <Money amount={total} style={[styles.statValue, { color: theme.text }]} />
-        </StatCard>
-        <StatCard label="Expenses" theme={theme}>
-          <Text style={[styles.statValue, { color: theme.text }]}>{monthExpenses.length}</Text>
-        </StatCard>
-        <StatCard label="Average" theme={theme}>
-          <Money amount={average} style={[styles.statValue, { color: theme.text }]} />
-        </StatCard>
-      </View>
+          <Text style={[styles.monthLabel, { color: theme.text }]}>{formatMonth(month)}</Text>
 
-      <MonthBudgetCard month={month} spent={total} />
+          <Pressable
+            onPress={() => step(1)}
+            accessibilityRole="button"
+            accessibilityLabel="Next month"
+            hitSlop={8}
+            style={({ pressed }) => [styles.arrow, pressed && styles.pressed]}
+          >
+            <Ionicons name="chevron-forward" size={20} color={theme.brand} />
+          </Pressable>
+        </View>
 
-      {monthExpenses.length === 0 ? (
-        <EmptyState
-          icon="bar-chart-outline"
-          title="Nothing to show"
-          message={`You have no expenses recorded for ${formatMonth(month)}.`}
-        />
-      ) : (
-        <>
-          {/* View switcher */}
-          <View style={[styles.segment, { backgroundColor: theme.surface }]}>
-            {VIEWS.map((option) => {
-              const selected = view === option.id;
-              return (
-                <Pressable
-                  key={option.id}
-                  onPress={() => setView(option.id)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={`${option.label} view`}
-                  style={[styles.segmentItem, selected && { backgroundColor: theme.brand }]}
-                >
-                  <Ionicons
-                    name={option.icon}
-                    size={15}
-                    color={selected ? theme.onBrand : theme.textMuted}
-                  />
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      { color: selected ? theme.onBrand : theme.textMuted },
-                    ]}
-                  >
-                    {option.label}
+        {/* Headline figures */}
+        <View style={styles.statRow}>
+          <StatCard label="Total" theme={theme}>
+            <Money amount={total} style={[styles.statValue, { color: theme.text }]} />
+          </StatCard>
+          <StatCard label="Expenses" theme={theme}>
+            <Text style={[styles.statValue, { color: theme.text }]}>{monthExpenses.length}</Text>
+          </StatCard>
+          <StatCard label="Average" theme={theme}>
+            <Money amount={average} style={[styles.statValue, { color: theme.text }]} />
+          </StatCard>
+        </View>
+
+        <View onLayout={(event) => (budgetTop.current = event.nativeEvent.layout.y)}>
+          <MonthBudgetCard month={month} spent={total} onFocusInput={revealBudget} />
+        </View>
+
+        {monthExpenses.length === 0 ? (
+          <EmptyState
+            icon="bar-chart-outline"
+            title="Nothing to show"
+            message={`You have no expenses recorded for ${formatMonth(month)}.`}
+          />
+        ) : (
+          <>
+            <SegmentedControl
+              options={VIEWS}
+              value={view}
+              onChange={setView}
+              accessibilityLabelSuffix=" view"
+            />
+
+            <View style={[styles.card, continuous, { backgroundColor: theme.card }]}>
+              {view === 'categories' && (
+                <>
+                  <Text style={[styles.cardHint, { color: theme.textMuted }]}>
+                    Tap a category to see the expenses behind it.
                   </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+                  <CategoryBreakdown
+                    rows={breakdown}
+                    total={total}
+                    expenses={monthExpenses}
+                    onOpenExpense={openExpense}
+                  />
+                </>
+              )}
 
-          <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            {view === 'categories' && (
+              {view === 'donut' && <CategoryDonut rows={breakdown} total={total} />}
+
+              {view === 'daily' && <DailyBars expenses={monthExpenses} month={month} />}
+
+              {view === 'trend' && <TrendLine monthlyTotals={monthlyTotals} month={month} />}
+            </View>
+
+            {!!biggest && (
               <>
-                <Text style={[styles.cardHint, { color: theme.textMuted }]}>
-                  Tap a category to see the expenses behind it.
-                </Text>
-                <CategoryBreakdown
-                  rows={breakdown}
-                  total={total}
-                  expenses={monthExpenses}
-                  onOpenExpense={openExpense}
-                />
+                <Text style={[styles.heading, { color: theme.textMuted }]}>Largest expense</Text>
+                <Pressable
+                  onPress={() => openExpense(biggest.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Largest expense, ${formatMoney(
+                    biggest.amount,
+                    currency
+                  )}. Tap to edit.`}
+                  style={({ pressed }) => [
+                    styles.card,
+                    continuous,
+                    { backgroundColor: theme.card },
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <View style={styles.biggestRow}>
+                    <View
+                      style={[
+                        styles.biggestIcon,
+                        { backgroundColor: getCategory(biggest.category).color },
+                      ]}
+                    >
+                      <Ionicons
+                        name={getCategory(biggest.category).icon}
+                        size={20}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                    <View style={styles.biggestBody}>
+                      <Money
+                        amount={biggest.amount}
+                        style={[styles.biggestAmount, { color: theme.text }]}
+                      />
+                      <Text style={[styles.biggestNote, { color: theme.textMuted }]}>
+                        {biggest.note || getCategory(biggest.category).label} ·{' '}
+                        {formatDate(biggest.date)}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color={theme.textMuted} />
+                  </View>
+                </Pressable>
               </>
             )}
-
-            {view === 'donut' && <CategoryDonut rows={breakdown} total={total} />}
-
-            {view === 'daily' && <DailyBars expenses={monthExpenses} month={month} />}
-
-            {view === 'trend' && <TrendLine monthlyTotals={monthlyTotals} month={month} />}
-          </View>
-
-          {!!biggest && (
-            <>
-              <Text style={[styles.heading, { color: theme.text }]}>Largest expense</Text>
-              <Pressable
-                onPress={() => openExpense(biggest.id)}
-                accessibilityRole="button"
-                accessibilityLabel={`Largest expense, ${formatMoney(
-                  biggest.amount,
-                  currency
-                )}. Tap to edit.`}
-                style={({ pressed }) => [
-                  styles.card,
-                  { backgroundColor: theme.card, borderColor: theme.border },
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <Money
-                  amount={biggest.amount}
-                  style={[styles.biggestAmount, { color: theme.text }]}
-                />
-                <Text style={[styles.biggestNote, { color: theme.textMuted }]}>
-                  {biggest.note || getCategory(biggest.category).label} ·{' '}
-                  {formatDate(biggest.date)}
-                </Text>
-              </Pressable>
-            </>
-          )}
-        </>
-      )}
-    </ScrollView>
+          </>
+        )}
+      </Animated.ScrollView>
+    </ScreenContainer>
   );
 }
 
 function StatCard({ label, theme, children }) {
   return (
-    <View style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Text style={[styles.statLabel, { color: theme.textMuted }]}>{label}</Text>
+    <View style={[styles.statCard, continuous, { backgroundColor: theme.card }]}>
+      <Text style={[styles.statLabel, { color: theme.textMuted }]} numberOfLines={1}>
+        {label}
+      </Text>
       {children}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
+  content: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
+    gap: spacing.md,
+  },
+  pressed: { opacity: 0.6 },
   switcher: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: radius.md,
-    borderWidth: 1,
-    padding: spacing.sm,
+    borderRadius: radius.md + 2,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    minHeight: 46,
   },
   arrow: { padding: spacing.sm },
-  monthLabel: { fontSize: 16, fontWeight: '700' },
+  monthLabel: { fontSize: 17, fontWeight: '600' },
   statRow: { flexDirection: 'row', gap: spacing.sm },
   statCard: {
     flex: 1,
+    minWidth: 0,
     padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    gap: spacing.xs,
+    borderRadius: radius.md + 2,
+    gap: 2,
   },
-  statLabel: { fontSize: 11, fontWeight: '600' },
-  statValue: { fontSize: 17, fontWeight: '800' },
-  segment: { flexDirection: 'row', borderRadius: radius.sm, padding: spacing.xs },
-  segmentItem: {
-    flex: 1,
-    flexDirection: 'row',
+  statLabel: { fontSize: 12 },
+  statValue: { fontSize: 17, fontWeight: '600' },
+  heading: {
+    fontSize: 13,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginTop: spacing.md,
+    marginLeft: spacing.lg,
+  },
+  card: { padding: spacing.lg, borderRadius: radius.md + 2, gap: spacing.lg },
+  cardHint: { fontSize: 13 },
+  biggestRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  biggestIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.sm,
   },
-  segmentText: { fontSize: 12, fontWeight: '700' },
-  heading: { fontSize: 16, fontWeight: '700', marginTop: spacing.md },
-  card: { padding: spacing.lg, borderRadius: radius.md, borderWidth: 1, gap: spacing.lg },
-  cardHint: { fontSize: 12 },
-  biggestAmount: { fontSize: 28, fontWeight: '800' },
-  biggestNote: { fontSize: 14 },
+  biggestBody: { flex: 1, gap: 1 },
+  biggestAmount: { fontSize: 22, fontWeight: '700' },
+  biggestNote: { fontSize: 13 },
 });

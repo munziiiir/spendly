@@ -61,8 +61,10 @@ const styles = StyleSheet.create({
   root: { gap: spacing.sm, marginTop: spacing.md },
   labels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   captionRow: { flexDirection: 'row', alignItems: 'center' },
-  caption: { fontSize: 12 },
-  strong: { fontWeight: '700' },
-  track: { height: 8, borderRadius: radius.pill, overflow: 'hidden' },
+  caption: { fontSize: 13 },
+  strong: { fontWeight: '600' },
+  // 6pt is the height iOS gives a progress view. A thicker bar reads as a
+  // chart, and this is a status indicator rather than a chart.
+  track: { height: 6, borderRadius: radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: radius.pill },
 });
