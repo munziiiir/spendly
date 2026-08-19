@@ -24,7 +24,7 @@ export default function AddExpenseScreen() {
   }
 
   return (
-    <ScreenContainer edges={[]}>
+    <ScreenContainer edges={[]} elevated>
       <ExpenseForm
         title="New Expense"
         actionLabel="Add"

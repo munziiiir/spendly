@@ -43,15 +43,18 @@ export default function CategoryChips({ value, onChange }) {
               pressed && styles.pressed,
             ]}
           >
+            {/* `onBrand` is white in both palettes. A selected chip is filled
+                with a saturated colour either way, so its label does not
+                follow the light/dark text colour. */}
             {!!option.icon && (
               <Ionicons
                 name={option.icon}
                 size={14}
-                color={selected ? '#FFFFFF' : option.color}
+                color={selected ? theme.onBrand : option.color}
               />
             )}
             <Text
-              style={[styles.label, { color: selected ? '#FFFFFF' : theme.text }]}
+              style={[styles.label, { color: selected ? theme.onBrand : theme.text }]}
               maxFontSizeMultiplier={1.4}
             >
               {option.label}
@@ -77,8 +80,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     minHeight: 34,
   },
-  // White on a filled chip in both themes: the fill is a saturated colour in
-  // light and dark alike, so the label does not follow the theme here.
   label: { fontSize: 14, fontWeight: '500' },
   pressed: { opacity: 0.6 },
   tailSpacer: { width: spacing.xs },

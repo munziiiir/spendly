@@ -44,7 +44,7 @@ export default function EditExpenseScreen() {
   // has no visible way back out.
   if (loading) {
     return (
-      <ScreenContainer edges={[]}>
+      <ScreenContainer edges={[]} elevated>
         <SheetHeader title="Edit Expense" onCancel={close} />
         <View style={styles.centre}>
           <ActivityIndicator size="large" color={theme.brand} />
@@ -55,7 +55,7 @@ export default function EditExpenseScreen() {
 
   if (!expense) {
     return (
-      <ScreenContainer edges={[]}>
+      <ScreenContainer edges={[]} elevated>
         <SheetHeader title="Edit Expense" onCancel={close} />
         <EmptyState
           icon="help-circle-outline"
@@ -87,7 +87,7 @@ export default function EditExpenseScreen() {
   }
 
   return (
-    <ScreenContainer edges={[]}>
+    <ScreenContainer edges={[]} elevated>
       <ExpenseForm
         initialValue={expense}
         title="Edit Expense"

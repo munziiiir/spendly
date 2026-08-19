@@ -17,7 +17,7 @@ import { convert } from '../../src/constants/rates';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useSettings, useTheme } from '../../src/context/SettingsContext';
 import { continuous, radius, spacing } from '../../src/theme';
-import { formatDateHeading, formatMonth, toDateKey, toMonthKey } from '../../src/utils/format';
+import { formatDateHeading, toDateKey, toMonthKey } from '../../src/utils/format';
 
 /** A SectionList that can report its scroll position to the fading title bar. */
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
@@ -97,7 +97,7 @@ export default function HomeScreen() {
                 its own and the largest type on the screen. */}
             <View style={[styles.summary, continuous, { backgroundColor: theme.card }]}>
               <Text style={[styles.summaryLabel, { color: theme.textMuted }]}>
-                {formatMonth(currentMonth)}
+                Spent this month
               </Text>
               <Money amount={monthTotal} style={[styles.summaryValue, { color: theme.text }]} />
               <BudgetBar spent={monthTotal} month={currentMonth} />

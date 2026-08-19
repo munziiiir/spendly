@@ -42,20 +42,20 @@ The full test report, including the manual test runs, is in
 | **State management with the Context API** | Two React contexts hold all state. `ExpensesContext` holds the list and its create, update and delete actions, and uses `useReducer` with a pure reducer. `SettingsContext` holds the currency, the theme and the budgets. |
 | **Persistence with AsyncStorage** | The app reads the saved data once when it starts, and writes it back after every change. Your expenses and settings survive a force-quit and a restart of the phone. |
 | **Works offline** | There is no network call anywhere in the app. Spendly works the same in aeroplane mode. |
-| Add an expense | An "Add expense" button floats over the Expenses list and opens the form as a modal. Enter an amount, pick one of seven categories, add an optional note, and pick a date. The form rejects an empty amount and a negative amount. |
-| Native date picker | The date opens a calendar, with "Today" and "Yesterday" buttons for the common cases. The calendar cannot offer a date that does not exist, so a typed date such as `2026-02-31` is no longer possible. |
+| Add an expense | An "Add expense" button floats over the Expenses list and opens the form as a modal sheet, with Cancel and Add in its toolbar. Enter an amount, pick one of seven categories, add an optional note, and pick a date. The form rejects an empty amount and a negative amount. A field that takes the keyboard scrolls itself clear of it. |
+| Native date picker | The date opens a calendar, which fades in and scrolls itself into view, with "Today" and "Yesterday" buttons for the common cases. The calendar cannot offer a date that does not exist, so a typed date such as `2026-02-31` is no longer possible. |
 | Four currencies with conversion | GBP, USD, EUR and MVR. Every expense keeps the currency you entered it in, and the app converts it for display. An expense of 10 US dollars reads as 154.20 rufiyaa once you switch to MVR. Budgets convert with it. |
 | The rufiyaa sign | The rufiyaa has no sign in Unicode, so the app draws the official Maldives Monetary Authority outline with SVG rather than a font character. |
 | Edit and delete | Tap any row to open it. Change it and save, or delete it after a confirmation alert. |
 | Expense list by day | The list groups expenses under "Today", "Yesterday" and full dates, newest first. |
 | Category filter | A chip bar filters the list to one category. An empty category shows its own message. |
-| Monthly total and budget bar | The header shows what you spent this month. The bar below it turns green, amber at 80% and red at 100% of your budget. |
+| Monthly total and budget bar | A card at the top of the Expenses tab shows what you spent this month. The bar below it turns green, amber at 80% and red at 100% of your budget. |
 | Budget for a single month | Every month can hold its own budget. A month with no figure of its own uses the default from Settings, so a holiday month does not force you to change the default and change it back. |
 | Four ways to read a month | The Stats tab switches between Categories, Share, Daily and Trend. Categories and Share show where the money went, Daily shows when it went, and Trend compares the last six months. |
 | Expenses behind a category | Tap a category on the Stats tab to open it and see the expenses that make up the figure. Tap one of them to edit it. |
 | Settings | Theme (System, Light or Dark), currency (GBP, USD, EUR or MVR), the default monthly budget, and a destructive "Clear all expenses" action. |
-| Light and dark themes | Every colour comes from one theme file. The whole app, the headers and the tab bar change together. |
-| Accessibility | Buttons, chips, inputs and the budget bar carry accessibility roles, labels and states for screen readers. |
+| Light and dark themes | Every colour comes from one theme file, and the values are Apple's own system colours. The whole app, the titles and the tab bar change together. |
+| Accessibility | Buttons, chips, inputs and the budget bar carry accessibility roles, labels and states for screen readers. Each screen title is marked as a heading. |
 
 ---
 
@@ -174,7 +174,7 @@ value rather than its digits.
 
 ```
 app/                          Routes (Expo Router)
-  _layout.js                  Root stack: providers, themed header, modal routes
+  _layout.js                  Root stack: providers and the two modal routes
   (tabs)/_layout.js           Bottom tab navigator
   (tabs)/index.js             Expenses: month total, budget bar, filter, list,
                               and the Add expense button
@@ -187,13 +187,15 @@ src/
                               ExpenseItem, CategoryChips, BudgetBar, ExpenseForm,
                               AddExpenseButton, MonthBudgetCard,
                               CategoryBreakdown, CategoryDonut, DailyBars,
-                              TrendLine, Money, CurrencySign, RufiyaaSign
+                              TrendLine, Money, CurrencySign, RufiyaaSign,
+                              LargeTitle, NavBar, SheetHeader,
+                              SegmentedControl, ListGroup, ListRow
   constants/categories.js     The seven categories and the four currencies
   constants/rates.js          Fixed exchange rates and the conversion helper
   context/expensesReducer.js  Pure reducer for the list
   context/ExpensesContext.js  Provider, CRUD actions, storage
   context/SettingsContext.js  Provider for currency, theme and budgets
-  theme/index.js              Light and dark palettes, spacing and radius scales
+  theme/index.js              Light and dark palettes, spacing, radius, shadow
   utils/format.js             Money and date formatting, input validation
   utils/storage.js            AsyncStorage wrappers that never throw
 __tests__/                    Jest unit tests
