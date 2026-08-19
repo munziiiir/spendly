@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../context/SettingsContext';
-import { continuous, radius, shadow, spacing } from '../theme';
+import { continuous, shadow, spacing } from '../theme';
 import { haptics } from '../utils/haptics';
 
 /**
@@ -118,21 +118,37 @@ export default function SegmentedControl({ options, value, onChange, accessibili
   );
 }
 
-/** The inset of the thumb inside its track, in points. iOS uses 2. */
-const PADDING = 2;
+/**
+ * The geometry of the control, fixed rather than derived.
+ *
+ * The thumb used to be stretched between a `top` and a `bottom` inset. Those
+ * are measured from a different edge than the padding that positions the
+ * segments, so the thumb came out taller than its own track and bulged past
+ * the ends of it. Giving the thumb a height, and deriving that height from
+ * the track, means the two cannot disagree.
+ *
+ * The radii follow the same rule. A rounded shape sitting inside another one
+ * only looks concentric when the inner radius is the outer radius less the
+ * gap between them; any other pair reads as a slightly wrong shape.
+ */
+const TRACK_HEIGHT = 36;
+const PADDING = 3;
+const THUMB_HEIGHT = TRACK_HEIGHT - PADDING * 2;
+const TRACK_RADIUS = 10;
 
 const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
-    borderRadius: radius.sm + 1,
+    height: TRACK_HEIGHT,
+    borderRadius: TRACK_RADIUS,
     padding: PADDING,
   },
   thumb: {
     position: 'absolute',
     top: PADDING,
-    bottom: PADDING,
     left: PADDING,
-    borderRadius: radius.sm - 1,
+    height: THUMB_HEIGHT,
+    borderRadius: TRACK_RADIUS - PADDING,
   },
   segment: {
     flex: 1,
@@ -140,8 +156,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
-    paddingVertical: 7,
-    minHeight: 32,
+    height: THUMB_HEIGHT,
   },
   label: { fontSize: 13, fontWeight: '500' },
   labelSelected: { fontWeight: '600' },

@@ -144,13 +144,14 @@ export default function SettingsScreen() {
                 haptics.selected();
                 updateSetting('currency', item.code);
               }}
-            >
-              {/* The sign sits on the trailing edge so the four rows line up
-                  on their labels rather than on signs of different widths. */}
-              <View style={styles.sign}>
+              // The sign leads the row, in the column an icon would use. On
+              // the trailing edge it had to share the space with the tick,
+              // which left the four signs sitting at different distances from
+              // the edge of the card.
+              leading={
                 <CurrencySign code={item.code} size={19} color={theme.textMuted} weight="400" />
-              </View>
-            </ListRow>
+              }
+            />
           ))}
         </ListGroup>
 
@@ -212,7 +213,6 @@ const styles = StyleSheet.create({
   // The segmented control is its own surface, so the card behind it would be
   // a second one. This makes the card carry the control instead of framing it.
   plainCard: { backgroundColor: 'transparent', borderRadius: 0 },
-  sign: { minWidth: 26, alignItems: 'flex-end' },
   budgetField: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   budgetInput: {
     fontSize: 17,
