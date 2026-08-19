@@ -55,6 +55,7 @@ The full test report, including the manual test runs, is in
 | Expenses behind a category | Tap a category on the Stats tab to open it and see the expenses that make up the figure. Tap one of them to edit it. |
 | Settings | Theme (System, Light or Dark), currency (GBP, USD, EUR or MVR), the default monthly budget, and a destructive "Clear all expenses" action. |
 | Light and dark themes | Every colour comes from one theme file, and the values are Apple's own system colours. The whole app, the titles and the tab bar change together. |
+| A tab bar of Liquid Glass | On iOS 26 the tab bar is a floating island of real glass that the list passes underneath. On Android, and on any iOS before 26, the same bar draws as a solid floating card. |
 | Accessibility | Buttons, chips, inputs and the budget bar carry accessibility roles, labels and states for screen readers. Each screen title is marked as a heading. |
 
 ---
@@ -166,6 +167,7 @@ value rather than its digits.
 | @expo/vector-icons (Ionicons) | All icons in the tab bar, the category grid and the list. |
 | react-native-svg 15.15.4 | The ring chart, the trend line and the rufiyaa sign. The daily bar chart uses plain Views and needs no library. |
 | @react-native-community/datetimepicker 9.1.0 | The calendar for the date field. Expo Go carries this module already, so it adds no native build step. |
+| expo-glass-effect 57.0.1 | The real Liquid Glass of iOS 26, used for the floating tab bar and the Add button. Expo Go carries this module already, and it falls back to a plain view off iOS, so it adds no native build step. |
 | Jest + jest-expo | The unit tests for the reducer and the helpers. |
 
 ---
@@ -175,7 +177,7 @@ value rather than its digits.
 ```
 app/                          Routes (Expo Router)
   _layout.js                  Root stack: providers and the two modal routes
-  (tabs)/_layout.js           Bottom tab navigator
+  (tabs)/_layout.js           Bottom tab navigator, drawn by FloatingTabBar
   (tabs)/index.js             Expenses: month total, budget bar, filter, list,
                               and the Add expense button
   (tabs)/stats.js             Stats: month switcher, budget, four chart views
@@ -188,8 +190,9 @@ src/
                               AddExpenseButton, MonthBudgetCard,
                               CategoryBreakdown, CategoryDonut, DailyBars,
                               TrendLine, Money, CurrencySign, RufiyaaSign,
-                              LargeTitle, NavBar, SheetHeader,
-                              SegmentedControl, ListGroup, ListRow
+                              LargeTitle, NavBar, SheetHeader, FloatingTabBar,
+                              GlassSurface, SegmentedControl, ListGroup,
+                              ListRow
   constants/categories.js     The seven categories and the four currencies
   constants/rates.js          Fixed exchange rates and the conversion helper
   context/expensesReducer.js  Pure reducer for the list
@@ -217,6 +220,11 @@ TESTING.md                    The test report
 - **No search.** The category filter is the only way to reduce the list.
 - **The Add button is only on the Expenses tab.** From Stats or Settings you
   must go back to Expenses to record something.
+- **The glass is only real on iOS 26.** `expo-glass-effect` draws the true
+  effect there. Android and older versions of iOS get a solid floating bar
+  instead. That is deliberate: a flat translucent panel over a moving list is
+  harder to read than a plain one, so the app does not imitate the material it
+  cannot have.
 - **The exchange rates are fixed in the code.** The app works offline, so it
   cannot ask a rate service. `src/constants/rates.js` holds the figures and the
   date they were taken. The rufiyaa is pegged to the US dollar, so that pair

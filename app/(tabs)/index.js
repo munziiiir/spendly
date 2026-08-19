@@ -13,6 +13,7 @@ import LargeTitle from '../../src/components/LargeTitle';
 import Money from '../../src/components/Money';
 import NavBar from '../../src/components/NavBar';
 import ScreenContainer from '../../src/components/ScreenContainer';
+import { useTabBarSpace } from '../../src/components/FloatingTabBar';
 import { convert } from '../../src/constants/rates';
 import { useExpenses } from '../../src/context/ExpensesContext';
 import { useSettings, useTheme } from '../../src/context/SettingsContext';
@@ -30,6 +31,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const tabBarSpace = useTabBarSpace();
   const { currency } = useSettings();
   const { expenses, loading, error } = useExpenses();
   const [filter, setFilter] = useState(null);
@@ -81,7 +83,12 @@ export default function HomeScreen() {
       <AnimatedSectionList
         sections={sections}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[styles.listContent, { paddingTop: insets.top + spacing.sm }]}
+        contentContainerStyle={[
+          styles.listContent,
+          // The floating bar and the Add button above it both sit over the
+          // list, so the last row has to clear the pair of them.
+          { paddingTop: insets.top + spacing.sm, paddingBottom: tabBarSpace + spacing.xxl * 2 },
+        ]}
         stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
@@ -140,11 +147,8 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   centre: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   loadingText: { fontSize: 14 },
-  // The bottom padding clears the floating Add button, so the last row of the
-  // list is always reachable.
   listContent: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl * 3,
     flexGrow: 1,
   },
   summary: { padding: spacing.lg, borderRadius: radius.lg },
