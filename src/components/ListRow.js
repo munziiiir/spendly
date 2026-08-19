@@ -83,9 +83,7 @@ export default function ListRow({
     </>
   );
 
-  const content = (
-    <View style={[styles.inner, hasIcon ? styles.innerWithIcon : styles.innerPlain]}>{body}</View>
-  );
+  const content = <View style={styles.inner}>{body}</View>;
 
   return (
     <View>
@@ -126,9 +124,8 @@ const styles = StyleSheet.create({
     // list row.
     minHeight: 44,
     paddingVertical: spacing.sm,
+    paddingLeft: spacing.lg,
   },
-  innerWithIcon: { paddingLeft: spacing.lg },
-  innerPlain: { paddingLeft: spacing.lg },
   iconWrap: {
     width: 30,
     height: 30,

@@ -12,15 +12,8 @@
  * Matching the system palette removes that clash.
  */
 
-/** Colours that mean the same thing in both palettes. */
-const shared = {
-  brandLight: '#5AC8FA', // systemLightBlue, for chart accents only
-};
-
 export const lightTheme = {
   mode: 'light',
-  ...shared,
-
   brand: '#007AFF', // systemBlue
   danger: '#FF3B30', // systemRed
   success: '#34C759', // systemGreen
@@ -41,6 +34,13 @@ export const lightTheme = {
   border: '#D8D8DC',
   separator: '#C6C6C8',
 
+  // A sheet sits on top of the page, so iOS gives it its own pair of
+  // backgrounds. In light mode they are the same as the page — the shadow and
+  // the rounded corners are enough to lift it. See the dark palette for why
+  // they exist at all.
+  backgroundElevated: '#F2F2F7',
+  cardElevated: '#FFFFFF',
+
   // The raised thumb of a segmented control. It is lighter than its track and
   // carries a shadow, which is what makes the selected segment read as on top.
   segmentThumb: '#FFFFFF',
@@ -50,8 +50,6 @@ export const lightTheme = {
 
 export const darkTheme = {
   mode: 'dark',
-  ...shared,
-
   brand: '#0A84FF', // systemBlue, dark variant
   danger: '#FF453A',
   success: '#30D158',
@@ -69,6 +67,12 @@ export const darkTheme = {
   border: '#38383A',
   separator: '#38383A',
 
+  // Dark mode has no shadow to speak of, because a shadow needs something
+  // lighter to fall on. iOS lifts a sheet by making it lighter than the page
+  // instead, and everything inside it moves up one step to match.
+  backgroundElevated: '#1C1C1E',
+  cardElevated: '#2C2C2E',
+
   // In dark mode the thumb is lighter than the track, not white.
   segmentThumb: '#636366',
 
@@ -81,10 +85,10 @@ export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 /**
  * Shared corner radii.
  *
- * The figures follow iOS: a grouped list card is 10, a prominent card is 16,
- * and a full-width button is 14.
+ * The figures follow iOS: a grouped list card is 10 and a prominent card
+ * is 16.
  */
-export const radius = { sm: 8, md: 10, lg: 16, button: 14, pill: 999 };
+export const radius = { sm: 8, md: 10, lg: 16, pill: 999 };
 
 /**
  * Applied to anything with a corner radius.

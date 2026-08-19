@@ -183,7 +183,7 @@ export default function SettingsScreen() {
             onPress={confirmClear}
             accessibilityLabel="Clear all expenses"
             icon="trash"
-            iconColor="#FFFFFF"
+            iconColor={theme.onBrand}
             iconBackground={theme.danger}
           />
         </ListGroup>

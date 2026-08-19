@@ -40,7 +40,7 @@ export default function ExpenseItem({ expense, onPress, first, last }) {
         style={({ pressed }) => [styles.row, pressed && { backgroundColor: theme.surface }]}
       >
         <View style={[styles.icon, { backgroundColor: category.color }]}>
-          <Ionicons name={category.icon} size={18} color="#FFFFFF" />
+          <Ionicons name={category.icon} size={18} color={theme.onBrand} />
         </View>
 
         <View style={styles.body}>

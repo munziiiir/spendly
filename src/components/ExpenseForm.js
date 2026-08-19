@@ -220,7 +220,7 @@ export default function ExpenseForm({
             style={[
               styles.amountRow,
               continuous,
-              { backgroundColor: theme.card, borderColor: theme.separator },
+              { backgroundColor: theme.cardElevated, borderColor: theme.separator },
             ]}
           >
             <CurrencySign code={currency} size={28} color={theme.textMuted} />
@@ -257,7 +257,7 @@ export default function ExpenseForm({
                   styles.gridItem,
                   continuous,
                   {
-                    backgroundColor: theme.card,
+                    backgroundColor: theme.cardElevated,
                     // The selected tile is marked by a ring in the colour of
                     // the category, not by a wash of it. A wash changes the
                     // tile's weight and makes the grid look uneven.
@@ -297,7 +297,7 @@ export default function ExpenseForm({
             style={[
               styles.input,
               continuous,
-              { backgroundColor: theme.card, borderColor: theme.separator, color: theme.text },
+              { backgroundColor: theme.cardElevated, borderColor: theme.separator, color: theme.text },
             ]}
           />
         </View>
@@ -319,7 +319,7 @@ export default function ExpenseForm({
               styles.dateButton,
               continuous,
               {
-                backgroundColor: theme.card,
+                backgroundColor: theme.cardElevated,
                 borderColor: pickerOpen ? theme.brand : theme.separator,
                 borderWidth: pickerOpen ? 1.5 : StyleSheet.hairlineWidth,
               },
@@ -345,7 +345,7 @@ export default function ExpenseForm({
                 styles.pickerWrap,
                 continuous,
                 {
-                  backgroundColor: theme.card,
+                  backgroundColor: theme.cardElevated,
                   borderColor: theme.separator,
                   opacity: pickerAnim,
                   transform: [
@@ -382,7 +382,7 @@ export default function ExpenseForm({
             style={({ pressed }) => [
               styles.delete,
               continuous,
-              { backgroundColor: theme.card, borderColor: theme.separator },
+              { backgroundColor: theme.cardElevated, borderColor: theme.separator },
               pressed && styles.pressed,
             ]}
           >

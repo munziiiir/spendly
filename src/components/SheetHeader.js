@@ -35,7 +35,7 @@ export default function SheetHeader({ title, onCancel, actionLabel, onAction, ac
         styles.root,
         {
           paddingTop: topInset,
-          backgroundColor: theme.background,
+          backgroundColor: theme.backgroundElevated,
           borderBottomColor: theme.separator,
         },
       ]}

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -31,9 +32,34 @@ export default function NavBar({ title, scrollY }) {
     extrapolate: 'clamp',
   });
 
+  /**
+   * Whether the bar is solid enough to be catching taps.
+   *
+   * The bar is opaque once it has appeared, and the content it hides keeps
+   * scrolling underneath. Left permanently transparent to touch, a tap on the
+   * bar would open whichever expense happened to be behind it — a row the user
+   * cannot see. So the bar swallows taps while it is visible, and lets them
+   * through while it is not.
+   *
+   * The listener still runs with the fade on the native driver; it reports the
+   * value back to JavaScript, and the state only changes on the two frames
+   * where the bar crosses the threshold.
+   */
+  const [solid, setSolid] = useState(false);
+
+  useEffect(() => {
+    const id = scrollY.addListener(({ value }) => {
+      setSolid((current) => {
+        const next = value >= FADE_END;
+        return next === current ? current : next;
+      });
+    });
+    return () => scrollY.removeListener(id);
+  }, [scrollY]);
+
   return (
     <Animated.View
-      pointerEvents="none"
+      pointerEvents={solid ? 'auto' : 'none'}
       style={[
         styles.root,
         {

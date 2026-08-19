@@ -240,7 +240,7 @@ export default function StatsScreen() {
                       <Ionicons
                         name={getCategory(biggest.category).icon}
                         size={20}
-                        color="#FFFFFF"
+                        color={theme.onBrand}
                       />
                     </View>
                     <View style={styles.biggestBody}>
